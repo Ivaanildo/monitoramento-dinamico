@@ -29,3 +29,7 @@ backend/scripts/tmp_*.py
 backend/config.local.yaml
 backend/config.*.local.yaml
 backend/config.override.yaml
+backend/output/
+backend/scripts/gerar_relatorio_local.py
+
+.vercel
