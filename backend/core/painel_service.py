@@ -85,16 +85,21 @@ async def obter_painel_agregado(config: dict) -> dict:
         return def_vazio
 
     try:
-        # Busca o ultimo ciclo e seus snapshots associados
-        resp = client.get("/ciclos?select=*,snapshots_rotas(*)&order=ts_iso.desc&limit=1")
-        resp.raise_for_status()
-        dados = resp.json()
-        
+        # 1. Busca o último ciclo
+        resp_ciclo = client.get("/ciclos?order=ts_iso.desc&limit=1")
+        resp_ciclo.raise_for_status()
+        dados = resp_ciclo.json()
+
         if not dados:
             return def_vazio
-            
+
         ultimo_ciclo = dados[0]
-        snapshots = ultimo_ciclo.get("snapshots_rotas", [])
+        ciclo_id = ultimo_ciclo.get("id")
+
+        # 2. Busca os snapshots do ciclo separadamente (evita dependência de FK no PostgREST)
+        resp_snaps = client.get(f"/snapshots_rotas?ciclo_id=eq.{ciclo_id}")
+        resp_snaps.raise_for_status()
+        snapshots = resp_snaps.json()
         
         # Mapeia os snapshots pelas siglas/trechos
         mapa_snapshots = {}

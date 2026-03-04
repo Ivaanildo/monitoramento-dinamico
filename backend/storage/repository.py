@@ -45,8 +45,10 @@ def salvar_snapshot_agregado(resultados: list, font_list: str = "google,here"):
                 "rodovia": r.get("sigla", ""),  # Sigla ex: BR-116
                 "status": r.get("status", "Normal"),
                 "ocorrencia": r.get("ocorrencia", "N/A"),
+                "descricao": r.get("relato", ""),
+                "atraso_min": r.get("atraso_min", 0),
                 "confianca_pct": r.get("confianca_pct", 0),
-                "conflito_fontes": 0, 
+                "conflito_fontes": 0,
                 "ts_iso": agora_iso
             })
 
