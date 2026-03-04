@@ -1,0 +1,1354 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Monitoramento Dinâmico de Rotas — Apresentação Técnica</title>
+  <style>
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --bg: #f5f6fa;
+      --bg-card: #ffffff;
+      --bg-card-alt: #f0f1f5;
+      --text: #2c3e50;
+      --text-sec: #6b7c93;
+      --accent: #4a7fc1;
+      --accent-light: #e8f0fb;
+      --green: #3a9d6a;
+      --green-light: #e6f5ee;
+      --yellow: #c79a1e;
+      --yellow-light: #fdf6e3;
+      --orange: #c27132;
+      --orange-light: #fdf0e6;
+      --red: #b5453a;
+      --red-light: #fdecea;
+      --here-teal: #1a9e99;
+      --google-blue: #5a8fd4;
+      --border: #dfe3ea;
+      --radius: 10px;
+      --shadow: 0 2px 12px rgba(0, 0, 0, .06);
+    }
+
+    html,
+    body {
+      height: 100%;
+      overflow: hidden;
+    }
+
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+    }
+
+    .slide {
+      position: absolute;
+      inset: 0;
+      display: none;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 48px 64px;
+      opacity: 0;
+      transform: translateX(30px);
+      transition: opacity .35s ease, transform .35s ease;
+    }
+
+    .slide.active {
+      display: flex;
+      opacity: 1;
+      transform: translateX(0);
+    }
+
+    .slide-inner {
+      max-width: 1100px;
+      width: 100%;
+    }
+
+    h1 {
+      font-size: 2.4em;
+      font-weight: 700;
+      margin-bottom: 10px;
+      color: var(--text);
+    }
+
+    h2 {
+      font-size: 1.85em;
+      font-weight: 600;
+      margin-bottom: 20px;
+      color: var(--accent);
+    }
+
+    h3 {
+      font-size: 1.15em;
+      font-weight: 600;
+      margin-bottom: 10px;
+      color: var(--text);
+    }
+
+    p,
+    li {
+      font-size: 1.05em;
+    }
+
+    .subtitle {
+      font-size: 1.2em;
+      color: var(--text-sec);
+      margin-bottom: 6px;
+    }
+
+    .small {
+      font-size: .88em;
+      color: var(--text-sec);
+    }
+
+    .highlight {
+      color: var(--accent);
+      font-weight: 600;
+    }
+
+    .number-big {
+      font-size: 2.8em;
+      font-weight: 800;
+      line-height: 1.1;
+    }
+
+    .number-medium {
+      font-size: 1.8em;
+      font-weight: 700;
+    }
+
+    .card-grid {
+      display: grid;
+      gap: 16px;
+    }
+
+    .grid-2 {
+      grid-template-columns: 1fr 1fr;
+    }
+
+    .grid-3 {
+      grid-template-columns: 1fr 1fr 1fr;
+    }
+
+    .grid-2x3 {
+      grid-template-columns: 1fr 1fr 1fr;
+    }
+
+    .grid-4 {
+      grid-template-columns: 1fr 1fr 1fr 1fr;
+    }
+
+    .card {
+      background: var(--bg-card);
+      border-radius: var(--radius);
+      padding: 20px;
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border);
+    }
+
+    .card-accent {
+      border-left: 4px solid var(--accent);
+    }
+
+    .card-green {
+      border-left: 4px solid var(--green);
+    }
+
+    .card-yellow {
+      border-left: 4px solid var(--yellow);
+    }
+
+    .card-orange {
+      border-left: 4px solid var(--orange);
+    }
+
+    .card-red {
+      border-left: 4px solid var(--red);
+    }
+
+    .card-google {
+      border-left: 4px solid var(--google-blue);
+    }
+
+    .card-here {
+      border-left: 4px solid var(--here-teal);
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 3px 14px;
+      border-radius: 20px;
+      font-weight: 600;
+      font-size: .9em;
+    }
+
+    .badge-normal {
+      background: var(--green-light);
+      color: var(--green);
+    }
+
+    .badge-moderado {
+      background: var(--yellow-light);
+      color: var(--yellow);
+    }
+
+    .badge-intenso {
+      background: var(--orange-light);
+      color: var(--orange);
+    }
+
+    .badge-parado {
+      background: var(--red-light);
+      color: var(--red);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 14px 0;
+    }
+
+    th {
+      background: var(--bg-card-alt);
+      padding: 10px 14px;
+      text-align: left;
+      font-weight: 600;
+      font-size: .92em;
+      border-bottom: 2px solid var(--accent);
+    }
+
+    td {
+      padding: 9px 14px;
+      border-bottom: 1px solid var(--border);
+      font-size: .92em;
+    }
+
+    tr:nth-child(even) td {
+      background: var(--bg-card-alt);
+    }
+
+    .bar-track {
+      background: var(--bg-card-alt);
+      border-radius: 8px;
+      height: 22px;
+      overflow: hidden;
+      margin: 6px 0;
+    }
+
+    .bar-fill {
+      height: 100%;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      padding-left: 10px;
+      font-size: .82em;
+      font-weight: 600;
+      color: #fff;
+      transition: width 1s ease;
+    }
+
+    .flow-diagram {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .flow-box {
+      background: var(--bg-card);
+      border: 2px solid var(--accent);
+      border-radius: var(--radius);
+      padding: 14px 20px;
+      text-align: center;
+      min-width: 130px;
+      box-shadow: var(--shadow);
+    }
+
+    .flow-arrow {
+      font-size: 1.6em;
+      color: var(--accent);
+    }
+
+    .compare-cols {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    .compare-col {
+      padding: 20px;
+      border-radius: var(--radius);
+    }
+
+    .compare-before {
+      background: var(--red-light);
+      border: 2px solid var(--red);
+    }
+
+    .compare-after {
+      background: var(--green-light);
+      border: 2px solid var(--green);
+    }
+
+    .highlight-box {
+      background: var(--accent-light);
+      border: 2px solid var(--accent);
+      border-radius: var(--radius);
+      padding: 16px 24px;
+      margin: 14px 0;
+      text-align: center;
+    }
+
+    .highlight-box.green-box {
+      background: var(--green-light);
+      border-color: var(--green);
+    }
+
+    .highlight-box.yellow-box {
+      background: var(--yellow-light);
+      border-color: var(--yellow);
+    }
+
+    .highlight-box.red-box {
+      background: var(--red-light);
+      border-color: var(--red);
+    }
+
+    .scale-bar {
+      display: flex;
+      height: 36px;
+      border-radius: 8px;
+      overflow: hidden;
+      margin: 14px 0;
+    }
+
+    .scale-seg {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      font-size: .82em;
+    }
+
+    .step {
+      display: flex;
+      gap: 14px;
+      margin: 10px 0;
+      align-items: flex-start;
+    }
+
+    .step-num {
+      background: var(--accent);
+      color: #fff;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: .85em;
+      flex-shrink: 0;
+    }
+
+    .road-tag {
+      display: inline-block;
+      background: var(--bg-card-alt);
+      border: 1px solid var(--border);
+      padding: 2px 10px;
+      border-radius: 4px;
+      font-size: .82em;
+      margin: 2px;
+      font-weight: 600;
+    }
+
+    ul.clean {
+      list-style: none;
+    }
+
+    ul.clean li {
+      padding: 5px 0;
+      padding-left: 20px;
+      position: relative;
+    }
+
+    ul.clean li::before {
+      content: '▸';
+      position: absolute;
+      left: 0;
+      color: var(--accent);
+    }
+
+    ul.check li::before {
+      content: '✓';
+      color: var(--green);
+    }
+
+    ul.cross li::before {
+      content: '✗';
+      color: var(--red);
+    }
+
+    .slide.active .animate-in {
+      animation: fadeUp .5s ease forwards;
+    }
+
+    @keyframes fadeUp {
+      from {
+        opacity: 0;
+        transform: translateY(16px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .delay-1 {
+      animation-delay: .12s !important;
+      opacity: 0;
+    }
+
+    .delay-2 {
+      animation-delay: .24s !important;
+      opacity: 0;
+    }
+
+    .delay-3 {
+      animation-delay: .36s !important;
+      opacity: 0;
+    }
+
+    .nav-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 28px;
+      background: rgba(245, 246, 250, .96);
+      backdrop-filter: blur(8px);
+      border-top: 1px solid var(--border);
+      z-index: 100;
+    }
+
+    .nav-btn {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 7px 18px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: .9em;
+      transition: background .2s;
+    }
+
+    .nav-btn:hover {
+      background: var(--bg-card-alt);
+    }
+
+    .nav-btn:disabled {
+      opacity: .3;
+      cursor: not-allowed;
+    }
+
+    .progress-track {
+      flex: 1;
+      margin: 0 20px;
+      height: 4px;
+      background: var(--border);
+      border-radius: 2px;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: var(--accent);
+      border-radius: 2px;
+      transition: width .4s ease;
+    }
+
+    .slide-counter {
+      color: var(--text-sec);
+      font-size: .85em;
+      min-width: 60px;
+      text-align: center;
+    }
+
+    .critical-note {
+      background: var(--yellow-light);
+      border-left: 4px solid var(--yellow);
+      border-radius: 0 var(--radius) var(--radius) 0;
+      padding: 12px 18px;
+      margin: 12px 0;
+      font-size: .95em;
+    }
+
+    .arch-layer {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 12px 18px;
+      margin: 6px 0;
+      box-shadow: var(--shadow);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .arch-layer .layer-label {
+      background: var(--accent-light);
+      color: var(--accent);
+      padding: 4px 12px;
+      border-radius: 6px;
+      font-weight: 600;
+      font-size: .85em;
+      white-space: nowrap;
+    }
+
+    @media print {
+      .slide {
+        display: flex !important;
+        opacity: 1 !important;
+        transform: none !important;
+        position: relative !important;
+        page-break-after: always;
+        min-height: 100vh;
+      }
+
+      .nav-bar {
+        display: none !important;
+      }
+
+      body {
+        overflow: visible;
+      }
+    }
+
+    @media (max-width: 900px) {
+      .slide {
+        padding: 24px 24px;
+      }
+
+      .grid-2,
+      .grid-3,
+      .grid-2x3,
+      .grid-4,
+      .compare-cols {
+        grid-template-columns: 1fr;
+      }
+
+      h1 {
+        font-size: 1.7em;
+      }
+
+      h2 {
+        font-size: 1.4em;
+      }
+
+      .number-big {
+        font-size: 2em;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- ===== SLIDE 1: CAPA ===== -->
+  <section class="slide active" data-slide="1">
+    <div class="slide-inner" style="text-align:center;">
+      <div style="margin-bottom:28px;">
+        <div style="display:inline-flex;align-items:center;gap:14px;">
+          <div
+            style="width:16px;height:16px;border-radius:50%;background:var(--green);border:3px solid var(--bg-card);">
+          </div>
+          <div
+            style="width:100px;height:4px;background:linear-gradient(90deg,var(--green),var(--yellow),var(--red));border-radius:2px;">
+          </div>
+          <div style="width:16px;height:16px;border-radius:50%;background:var(--red);border:3px solid var(--bg-card);">
+          </div>
+        </div>
+      </div>
+      <h1 class="animate-in">Monitoramento Dinâmico de Rotas<br>e Tráfego em Tempo Real</h1>
+      <p class="subtitle animate-in delay-1">Arquitetura, capacidades, custos e pontos de atenção</p>
+      <p class="small animate-in delay-2" style="margin-top:28px;">Março 2026 &nbsp;·&nbsp; Versão 2.0</p>
+      <p class="small animate-in delay-3" style="margin-top:40px;opacity:.5;">Use as setas ← → para navegar</p>
+    </div>
+  </section>
+
+  <!-- ===== SLIDE 2: CONTEXTO E PROBLEMA ===== -->
+  <section class="slide" data-slide="2">
+    <div class="slide-inner">
+      <h2 class="animate-in">Contexto: O Problema Operacional</h2>
+      <div class="compare-cols animate-in delay-1">
+        <div class="compare-col compare-before">
+          <h3 style="color:var(--red);">Cenário Sem Sistema</h3>
+          <ul class="clean cross">
+            <li>Monitoramento manual de 20+ rodovias consome horas/dia</li>
+            <li>Dados genéricos de plataformas públicas — sem foco nas rotas reais</li>
+            <li>Impossível padronizar comparações entre rotas</li>
+            <li>Sem histórico, sem exportação, sem indicadores consolidados</li>
+          </ul>
+          <div style="margin-top:14px;text-align:center;">
+            <div class="number-big" style="color:var(--red);">255</div>
+            <p class="small">incidentes irrelevantes por consulta regional</p>
+          </div>
+        </div>
+        <div class="compare-col compare-after">
+          <h3 style="color:var(--green);">Com o Sistema Automatizado</h3>
+          <ul class="clean check">
+            <li>Resposta consolidada em menos de 10 segundos</li>
+            <li>Filtragem cirúrgica: apenas 200m ao redor da estrada real</li>
+            <li>4 níveis padronizados: Normal, Moderado, Intenso, Parado</li>
+            <li>Exportação Excel/CSV, favoritos, links Waze e Maps</li>
+          </ul>
+          <div style="margin-top:14px;text-align:center;">
+            <div class="number-big" style="color:var(--green);">2</div>
+            <p class="small">incidentes relevantes na rota efetiva</p>
+          </div>
+        </div>
+      </div>
+      <div class="highlight-box green-box animate-in delay-2" style="margin-top:16px;">
+        <span class="number-medium" style="color:var(--green);">99,2%</span> de redução de ruído — dado real: Campinas →
+        São Paulo
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== SLIDE 3: ARQUITETURA ATUAL ===== -->
+  <section class="slide" data-slide="3">
+    <div class="slide-inner">
+      <h2 class="animate-in">Arquitetura Atual do Sistema</h2>
+      <p class="subtitle animate-in">Stack completa em produção — Março 2026</p>
+      <div class="animate-in delay-1" style="margin:20px 0;">
+        <div class="arch-layer"><span class="layer-label">Frontend</span><span>React + Vite + TypeScript — 3 páginas:
+            Login, Consulta Individual, Painel Corporativo</span></div>
+        <div class="arch-layer"><span class="layer-label">Backend</span><span>FastAPI (Python) — REST API com 15+
+            endpoints, middleware de logging, tratamento de erros estruturado</span></div>
+        <div class="arch-layer"><span class="layer-label">Auth</span><span>Autenticação local via cookie HMAC-SHA256 com
+            sessão de 24h (migração para Supabase Auth planejada)</span></div>
+        <div class="arch-layer"><span class="layer-label">APIs Externas</span><span>Google Routes API v2 (Pro) + HERE
+            Maps (Routing Truck, Incidents, Traffic Flow)</span></div>
+        <div class="arch-layer"><span class="layer-label">Cache</span><span>Cache em memória com TTL de 5 minutos —
+            evita chamadas duplicadas às APIs pagas</span></div>
+        <div class="arch-layer"><span class="layer-label">Persistência</span><span>Supabase (PostgreSQL) — ciclos de
+            consulta + snapshots agregados por rota</span></div>
+        <div class="arch-layer"><span class="layer-label">Deploy</span><span>Frontend via Vercel · Backend local
+            (uvicorn) com possibilidade de containerização</span></div>
+      </div>
+      <div class="critical-note animate-in delay-2">
+        <strong>⚠ Ponto de atenção:</strong> A autenticação atual é local e temporária. Credenciais ficam no
+        <code>config.yaml</code>. A migração para Supabase Auth é uma pendência técnica relevante para produção em
+        escala.
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== SLIDE 4: FLUXO DE DADOS ===== -->
+  <section class="slide" data-slide="4">
+    <div class="slide-inner">
+      <h2 class="animate-in">Fluxo de Dados — Da Consulta ao Resultado</h2>
+      <div class="flow-diagram animate-in delay-1" style="margin:28px 0;">
+        <div class="flow-box" style="border-color:var(--text-sec);">
+          <div style="font-size:1.4em;">👤</div>
+          <div style="font-weight:600;">Usuário</div>
+          <div class="small">digita ou seleciona rota</div>
+        </div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-box">
+          <div style="font-size:1.4em;">⚙️</div>
+          <div style="font-weight:600;">FastAPI</div>
+          <div class="small">consultor.py</div>
+        </div>
+        <div class="flow-arrow">→</div>
+        <div style="display:flex;flex-direction:column;gap:10px;">
+          <div class="flow-box" style="border-color:var(--google-blue);">
+            <div style="font-weight:600;color:var(--google-blue);">Google Routes</div>
+            <div class="small">Tempo + Atraso + Velocidade</div>
+          </div>
+          <div class="flow-box" style="border-color:var(--here-teal);">
+            <div style="font-weight:600;color:var(--here-teal);">HERE Maps</div>
+            <div class="small">Incidentes + Fluxo + JamFactor</div>
+          </div>
+        </div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-box" style="border-color:var(--green);background:var(--green-light);">
+          <div style="font-size:1.4em;">📊</div>
+          <div style="font-weight:600;">Resultado Unificado</div>
+          <div class="small">Status + Mapa + Relatório</div>
+        </div>
+      </div>
+      <div class="card-grid grid-2 animate-in delay-2">
+        <div class="card card-accent">
+          <h3>⚡ Consulta Paralela (ThreadPoolExecutor)</h3>
+          <p>Google e HERE são consultados <strong>simultaneamente</strong>. O merge aplica a regra do status mais
+            severo — se uma fonte diz "Normal" e a outra "Intenso", prevalece <strong>"Intenso"</strong>.</p>
+        </div>
+        <div class="card card-yellow">
+          <h3>💾 Cache com TTL de 5 minutos</h3>
+          <p>Consultas repetidas dentro do TTL retornam resultado em memória com <strong>custo zero de API</strong>. O
+            cache é por chave: origem + destino + via + rodovia_logica.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== SLIDE 5: O QUE O SISTEMA ENTREGA ===== -->
+  <section class="slide" data-slide="5">
+    <div class="slide-inner">
+      <h2 class="animate-in">O Que o Sistema Entrega Hoje</h2>
+      <div class="card-grid grid-2x3 animate-in delay-1">
+        <div class="card card-green">
+          <h3>🚦 Status em 4 Níveis</h3>
+          <p><span class="badge badge-normal">Normal</span> <span class="badge badge-moderado">Moderado</span> <span
+              class="badge badge-intenso">Intenso</span> <span class="badge badge-parado">Parado</span></p>
+          <p class="small" style="margin-top:6px;">Classificação baseada em razão de atraso + atraso absoluto + jam
+            factor</p>
+        </div>
+        <div class="card card-accent">
+          <h3>⏱️ Tempo e Atraso</h3>
+          <p>Duração normal vs. com trânsito, atraso em minutos, distância em km</p>
+        </div>
+        <div class="card card-orange">
+          <h3>⚠️ Incidentes na Rota</h3>
+          <p>Acidentes, obras, interdições — filtrados em corredor de 200m da estrada real</p>
+        </div>
+        <div class="card card-accent">
+          <h3>🗺️ Mapa Interativo</h3>
+          <p>Rota colorida por tráfego + mapa de calor + badges de incidentes clicáveis</p>
+        </div>
+        <div class="card card-yellow">
+          <h3>📊 Indicador de Confiança</h3>
+          <p>Alta (90%), Média (60%) ou Baixa (20%) — baseado em quantas fontes responderam</p>
+        </div>
+        <div class="card card-green">
+          <h3>📥 Exportação</h3>
+          <p>Excel estilizado (.xlsx) e CSV — compatíveis com ERP, TMS e Power BI</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== SLIDE 6: ROTAS CORPORATIVAS E PAINEL ===== -->
+  <section class="slide" data-slide="6">
+    <div class="slide-inner">
+      <h2 class="animate-in">Painel Corporativo — 20 Rotas Monitoradas</h2>
+      <p class="subtitle animate-in">Dados persistidos no Supabase, atualizados por ciclos automáticos</p>
+      <div class="card-grid grid-2 animate-in delay-1" style="margin:18px 0;">
+        <div class="card card-accent">
+          <h3>Estrutura das Rotas</h3>
+          <p>Cada rota possui: ID (R01–R20), hub de origem/destino, waypoints via HERE, e códigos de rodovia lógica (ex:
+            BR-101, BR-116).</p>
+          <div style="margin-top:10px;">
+            <span class="road-tag">BR-101</span> <span class="road-tag">BR-116</span> <span
+              class="road-tag">BR-381</span>
+            <span class="road-tag">BR-153</span> <span class="road-tag">BR-040</span> <span
+              class="road-tag">BR-376</span>
+            <span class="road-tag">BR-277</span> <span class="road-tag">BR-060</span> <span
+              class="road-tag">BR-364</span>
+          </div>
+        </div>
+        <div class="card card-green">
+          <h3>Contrato do Painel (API)</h3>
+          <p>Endpoint <code>/painel</code> retorna JSON com:</p>
+          <ul class="clean" style="margin-top:6px;">
+            <li>rota_id, sigla, nome, trecho</li>
+            <li>status, ocorrência, relato</li>
+            <li>hora_atualização, confiança_pct, atraso_min</li>
+            <li>distância_km</li>
+          </ul>
+        </div>
+      </div>
+      <div class="critical-note animate-in delay-2">
+        <strong>⚠ Análise crítica:</strong> O painel depende do Supabase para buscar o último ciclo. Se a conexão falhar
+        ou não houver ciclo recente, retorna vazio. Não há fallback para cache local neste fluxo específico.
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== SLIDE 7: GOOGLE VS HERE ===== -->
+  <section class="slide" data-slide="7">
+    <div class="slide-inner">
+      <h2 class="animate-in">Fontes de Dados: Google vs HERE</h2>
+      <div class="compare-cols animate-in delay-1">
+        <div class="compare-col" style="background:var(--accent-light);border:2px solid var(--google-blue);">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
+            <div
+              style="width:36px;height:36px;border-radius:50%;background:var(--google-blue);display:flex;align-items:center;justify-content:center;font-weight:800;color:#fff;">
+              G</div>
+            <h3 style="margin:0;color:var(--google-blue);">Google Routes API v2</h3>
+          </div>
+          <ul class="clean">
+            <li>Rota mais rápida em tempo real (não apenas mais curta)</li>
+            <li>Duração normal vs. com trânsito</li>
+            <li>Atraso em minutos</li>
+            <li>Velocidade por trecho (speed intervals)</li>
+            <li>Polyline codificada da rota</li>
+          </ul>
+          <div class="critical-note" style="margin-top:12px;font-size:.88em;">
+            Classificado como <strong>Pro</strong> no billing por usar tráfego em tempo real + velocidade por trecho.
+          </div>
+        </div>
+        <div class="compare-col" style="background:#e6f7f6;border:2px solid var(--here-teal);">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
+            <div
+              style="width:36px;height:36px;border-radius:6px;background:var(--here-teal);display:flex;align-items:center;justify-content:center;font-weight:800;color:#fff;font-size:.8em;">
+              HERE</div>
+            <h3 style="margin:0;color:var(--here-teal);">HERE Maps (4 APIs)</h3>
+          </div>
+          <ul class="clean">
+            <li>Routing Truck — rota real para caminhões (restrições de peso/altura)</li>
+            <li>Incidents — acidentes, obras, interdições na faixa</li>
+            <li>Traffic Flow — velocidade atual vs. velocidade livre</li>
+            <li>Geocoding — conversão endereço/CEP → coordenadas</li>
+          </ul>
+          <div class="critical-note" style="margin-top:12px;font-size:.88em;">
+            Cada consulta gera <strong>2 chamadas</strong> de Traffic (incidents + flow). A franquia de 5.000 é
+            compartilhada entre elas.
+          </div>
+        </div>
+      </div>
+      <div class="highlight-box animate-in delay-2" style="margin-top:16px;">
+        <strong>Regra de segurança:</strong> Se Google diz "Normal" e HERE diz "Intenso", o sistema adota
+        <strong>"Intenso"</strong>.<br>
+        <span class="small">Para operação logística, é melhor reportar o pior cenário do que subestimar o risco.</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== SLIDE 8: CLASSIFICAÇÃO DE STATUS ===== -->
+  <section class="slide" data-slide="8">
+    <div class="slide-inner">
+      <h2 class="animate-in">Classificação de Status — Regras Quantitativas</h2>
+      <p class="subtitle animate-in">Decisão baseada em dois eixos: razão de atraso + atraso absoluto</p>
+      <div class="animate-in delay-1">
+        <table>
+          <thead>
+            <tr>
+              <th>Critério</th>
+              <th>Status</th>
+              <th>Fonte</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Viagem até 15% mais lenta que o normal</td>
+              <td><span class="badge badge-normal">Normal</span></td>
+              <td>Google (razão)</td>
+            </tr>
+            <tr>
+              <td>Viagem entre 15% e 40% mais lenta</td>
+              <td><span class="badge badge-moderado">Moderado</span></td>
+              <td>Google (razão)</td>
+            </tr>
+            <tr>
+              <td>Atraso ≥ 10 min com razão &gt; 1.03</td>
+              <td><span class="badge badge-moderado">Moderado</span></td>
+              <td>Google (absoluto)</td>
+            </tr>
+            <tr>
+              <td>Viagem &gt; 40% mais lenta <strong>OU</strong> atraso ≥ 25 min (razão &gt; 1.05)</td>
+              <td><span class="badge badge-intenso">Intenso</span></td>
+              <td>Google</td>
+            </tr>
+            <tr>
+              <td>Jam Factor máx ≥ 8</td>
+              <td><span class="badge badge-intenso">Intenso</span></td>
+              <td>HERE</td>
+            </tr>
+            <tr>
+              <td>Jam Factor máx = 10 <strong>OU</strong> via interditada</td>
+              <td><span class="badge badge-parado">Parado</span></td>
+              <td>HERE</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="card-grid grid-2 animate-in delay-2">
+        <div class="card card-accent">
+          <h3>Jam Factor: Por que o valor MÁXIMO?</h3>
+          <p>Uma BR com 380 km livres e 50 km parados tem <strong>média baixa</strong> — mas o motorista <strong>vai
+              passar</strong> pelos 50 km parados. O sistema usa <code>jam_factor_max</code>, não a média.</p>
+        </div>
+        <div class="card card-yellow">
+          <h3>Regra de rotas longas</h3>
+          <p>Se o atraso absoluto ultrapassar 25 min, o status é <span class="badge badge-intenso">Intenso</span>
+            independente do percentual (ex: 25 min numa viagem de 12h = 3,5% — parece pouco, mas impacta a operação).
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== SLIDE 9: CONFIANÇA DOS DADOS ===== -->
+  <section class="slide" data-slide="9">
+    <div class="slide-inner">
+      <h2 class="animate-in">Confiança dos Dados — Indicador de Qualidade</h2>
+      <div class="card-grid" style="grid-template-columns:1fr;gap:16px;max-width:750px;margin:20px auto;">
+        <div class="card card-green animate-in delay-1">
+          <div style="display:flex;align-items:center;gap:14px;">
+            <div style="font-size:1.8em;">✅✅</div>
+            <div style="flex:1;">
+              <h3 style="color:var(--green);">Alta — 90%</h3>
+              <p>Google + HERE responderam com sucesso</p>
+              <div class="bar-track">
+                <div class="bar-fill" style="width:90%;background:var(--green);">90%</div>
+              </div>
+              <p class="small">Dado confiável para decisão operacional</p>
+            </div>
+          </div>
+        </div>
+        <div class="card card-yellow animate-in delay-2">
+          <div style="display:flex;align-items:center;gap:14px;">
+            <div style="font-size:1.8em;">✅❌</div>
+            <div style="flex:1;">
+              <h3 style="color:var(--yellow);">Média — 60%</h3>
+              <p>Apenas uma fonte respondeu</p>
+              <div class="bar-track">
+                <div class="bar-fill" style="width:60%;background:var(--yellow);">60%</div>
+              </div>
+              <p class="small">Usar com cautela — confirmar por outros meios se crítico</p>
+            </div>
+          </div>
+        </div>
+        <div class="card card-red animate-in delay-3">
+          <div style="display:flex;align-items:center;gap:14px;">
+            <div style="font-size:1.8em;">❌❌</div>
+            <div style="flex:1;">
+              <h3 style="color:var(--red);">Baixa — 20%</h3>
+              <p>Nenhuma fonte respondeu (falha de conectividade ou configuração)</p>
+              <div class="bar-track">
+                <div class="bar-fill" style="width:20%;background:var(--red);">20%</div>
+              </div>
+              <p class="small">Não usar para decisão — consultar manualmente</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="critical-note animate-in delay-3">
+        <strong>Penalidade automática:</strong> Se o atraso calculado ultrapassar 90 minutos, a confiança perde 10
+        pontos — dados muito fora do comum podem indicar anomalia ou erro na API.
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== SLIDE 10: CUSTOS DE API ===== -->
+  <section class="slide" data-slide="10">
+    <div class="slide-inner">
+      <h2 class="animate-in">Custo por Consulta — Anatomia Detalhada</h2>
+      <div class="card animate-in delay-1" style="margin:16px 0;">
+        <h3 style="text-align:center;margin-bottom:14px;">1 consulta completa (após franquias esgotadas)</h3>
+        <div style="display:flex;gap:8px;align-items:center;justify-content:center;flex-wrap:wrap;">
+          <div
+            style="background:var(--accent-light);border:1px solid var(--google-blue);padding:8px 14px;border-radius:8px;text-align:center;">
+            <div class="small" style="color:var(--google-blue);">Google Routes</div>
+            <div style="font-weight:700;">US$ 0,005</div>
+          </div>
+          <span style="font-size:1.1em;">+</span>
+          <div
+            style="background:#e6f7f6;border:1px solid var(--here-teal);padding:8px 14px;border-radius:8px;text-align:center;">
+            <div class="small" style="color:var(--here-teal);">HERE Routing</div>
+            <div style="font-weight:700;">US$ 0,00275</div>
+          </div>
+          <span style="font-size:1.1em;">+</span>
+          <div
+            style="background:#e6f7f6;border:1px solid var(--here-teal);padding:8px 14px;border-radius:8px;text-align:center;">
+            <div class="small" style="color:var(--here-teal);">HERE Incidents</div>
+            <div style="font-weight:700;">US$ 0,00275</div>
+          </div>
+          <span style="font-size:1.1em;">+</span>
+          <div
+            style="background:#e6f7f6;border:1px solid var(--here-teal);padding:8px 14px;border-radius:8px;text-align:center;">
+            <div class="small" style="color:var(--here-teal);">HERE Flow</div>
+            <div style="font-weight:700;">US$ 0,00275</div>
+          </div>
+          <span style="font-size:1.2em;font-weight:700;">=</span>
+          <div
+            style="background:var(--accent-light);border:2px solid var(--accent);padding:10px 18px;border-radius:8px;text-align:center;">
+            <div class="small">Total</div>
+            <div style="font-weight:800;font-size:1.2em;">US$ 0,01325</div>
+            <div style="color:var(--green);font-weight:600;">≈ R$ 0,07</div>
+          </div>
+        </div>
+      </div>
+      <div class="animate-in delay-2">
+        <table>
+          <thead>
+            <tr>
+              <th>Cenário</th>
+              <th>Chamadas API</th>
+              <th>USD</th>
+              <th>BRL (~R$ 5,20)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Coordenadas (padrão)</td>
+              <td>4</td>
+              <td>US$ 0,01325</td>
+              <td style="color:var(--green);font-weight:600;">R$ 0,07</td>
+            </tr>
+            <tr>
+              <td>Endereço/CEP (+ geocoding)</td>
+              <td>6</td>
+              <td>US$ 0,01491</td>
+              <td>R$ 0,08</td>
+            </tr>
+            <tr>
+              <td style="color:var(--green);">Cache hit (&lt; 5 min)</td>
+              <td style="color:var(--green);font-weight:600;">0</td>
+              <td style="color:var(--green);font-weight:600;">US$ 0,00</td>
+              <td style="color:var(--green);font-weight:700;">R$ 0,00</td>
+            </tr>
+            <tr>
+              <td style="color:var(--orange);">Pior caso (busca expandida)</td>
+              <td>até 14</td>
+              <td>US$ 0,04</td>
+              <td style="color:var(--orange);">R$ 0,21</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== SLIDE 11: PROJEÇÃO 20 ROTAS ===== -->
+  <section class="slide" data-slide="11">
+    <div class="slide-inner">
+      <h2 class="animate-in">Projeção de Custo: 20 Rotas Corporativas</h2>
+      <p class="subtitle animate-in">Cenário atual configurado: 20 rotas, ciclos a cada 60 minutos, 24/7</p>
+      <div class="card-grid grid-2 animate-in delay-1" style="margin:14px 0;">
+        <div class="card">
+          <h3>Cálculo de Volume</h3>
+          <div class="step">
+            <div class="step-num">1</div>
+            <div>20 rotas × 24 consultas/dia = <strong>480/dia</strong></div>
+          </div>
+          <div class="step">
+            <div class="step-num">2</div>
+            <div>480 × 30 dias = <strong>14.400/mês</strong></div>
+          </div>
+          <div class="step">
+            <div class="step-num">3</div>
+            <div>Intervalo (60 min) &gt; Cache TTL (5 min) → cada ciclo é nova chamada</div>
+          </div>
+        </div>
+        <div class="card">
+          <h3>Franquias Mensais Gratuitas</h3>
+          <table style="margin:0;">
+            <tr>
+              <td><strong>Google Routes Pro</strong></td>
+              <td style="color:var(--green);font-weight:600;">10.000</td>
+            </tr>
+            <tr>
+              <td><strong>HERE Routing Truck</strong></td>
+              <td style="color:var(--green);font-weight:600;">5.000</td>
+            </tr>
+            <tr>
+              <td><strong>HERE Traffic (Inc+Flow)</strong></td>
+              <td style="color:var(--green);font-weight:600;">5.000*</td>
+            </tr>
+          </table>
+          <p class="small" style="margin-top:6px;">*Cada consulta consome 2 transações de Traffic</p>
+        </div>
+      </div>
+      <div class="animate-in delay-2">
+        <table>
+          <thead>
+            <tr>
+              <th>Fornecedor</th>
+              <th>Serviço</th>
+              <th>Chamadas/mês</th>
+              <th>Franquia</th>
+              <th>Pagas</th>
+              <th>Preço/1.000</th>
+              <th>USD</th>
+              <th>BRL</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong style="color:var(--google-blue);">Google</strong></td>
+              <td>Routes Pro</td>
+              <td>14.400</td>
+              <td style="color:var(--green);">10.000</td>
+              <td>4.400</td>
+              <td>US$ 5,00</td>
+              <td><strong>US$ 22,00</strong></td>
+              <td>R$ 114,40</td>
+            </tr>
+            <tr>
+              <td><strong style="color:var(--here-teal);">HERE</strong></td>
+              <td>Routing Truck</td>
+              <td>14.400</td>
+              <td style="color:var(--green);">5.000</td>
+              <td>9.400</td>
+              <td>US$ 2,75</td>
+              <td><strong>US$ 25,85</strong></td>
+              <td>R$ 134,42</td>
+            </tr>
+            <tr>
+              <td><strong style="color:var(--here-teal);">HERE</strong></td>
+              <td>Traffic (Inc+Flow)</td>
+              <td>28.800</td>
+              <td style="color:var(--green);">5.000</td>
+              <td>23.800</td>
+              <td>US$ 2,75</td>
+              <td><strong>US$ 65,45</strong></td>
+              <td>R$ 340,34</td>
+            </tr>
+          </tbody>
+          <tfoot>
+            <tr style="background:var(--accent-light);">
+              <td colspan="6" style="text-align:right;font-weight:700;border-top:2px solid var(--accent);">TOTAL MENSAL
+                (20 rotas)</td>
+              <td style="font-weight:800;font-size:1.05em;border-top:2px solid var(--accent);">US$ 113,30</td>
+              <td style="font-weight:800;font-size:1.05em;color:var(--accent);border-top:2px solid var(--accent);">R$
+                589,16</td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== SLIDE 12: PONTOS CRÍTICOS ===== -->
+  <section class="slide" data-slide="12">
+    <div class="slide-inner">
+      <h2 class="animate-in">Pontos Críticos e Débitos Técnicos</h2>
+      <p class="subtitle animate-in">Análise objetiva do que precisa de atenção</p>
+      <div class="card-grid grid-2 animate-in delay-1" style="margin:16px 0;">
+        <div class="card card-red">
+          <h3 style="color:var(--red);">🔒 Segurança</h3>
+          <ul class="clean cross">
+            <li>Auth local com credenciais em config.yaml</li>
+            <li>Cookie de sessão sem flag <code>Secure</code> em dev</li>
+            <li>Endpoints /favoritos e /cache carecem de proteção consistente</li>
+            <li>Migração para Supabase Auth ainda pendente</li>
+          </ul>
+        </div>
+        <div class="card card-orange">
+          <h3 style="color:var(--orange);">⚡ Resiliência</h3>
+          <ul class="clean cross">
+            <li>Sem fallback local quando Supabase está indisponível no fluxo do painel</li>
+            <li>Cache somente em memória — perdido a cada restart do servidor</li>
+            <li>Sem circuit breaker para APIs externas</li>
+            <li>Sem retry automático em falhas transitórias</li>
+          </ul>
+        </div>
+        <div class="card card-yellow">
+          <h3 style="color:var(--yellow);">📐 Arquitetura</h3>
+          <ul class="clean">
+            <li>Backend monolítico — adequado para o escopo atual</li>
+            <li>Sem separação clara entre camadas (service / repository)</li>
+            <li>Config loader suporta env overrides — bom</li>
+            <li>Testes existentes mas cobertura parcial</li>
+          </ul>
+        </div>
+        <div class="card card-green">
+          <h3 style="color:var(--green);">✅ Pontos Fortes</h3>
+          <ul class="clean check">
+            <li>Middleware de logging estruturado com request ID</li>
+            <li>Handler de erros centralizado (HTTP + unhandled)</li>
+            <li>Consulta paralela via ThreadPoolExecutor</li>
+            <li>Classificação de status robusta (dual-source merge)</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== SLIDE 13: FRONTEND ===== -->
+  <section class="slide" data-slide="13">
+    <div class="slide-inner">
+      <h2 class="animate-in">Frontend — React + Vite + TypeScript</h2>
+      <p class="subtitle animate-in">Interface web moderna com 3 páginas principais</p>
+      <div class="card-grid grid-3 animate-in delay-1" style="margin:18px 0;">
+        <div class="card card-accent">
+          <h3>🔐 Login</h3>
+          <p>Autenticação via formulário. Cookie HMAC-SHA256 com sessão de 24h. Validação no boot do app.</p>
+          <p class="small" style="margin-top:6px;">LoginPage.tsx — 4.4 KB</p>
+        </div>
+        <div class="card card-green">
+          <h3>🔍 Consulta Individual</h3>
+          <p>Consulta on-demand com origem/destino. Exibe mapa interativo, incidentes, status, exportação.</p>
+          <p class="small" style="margin-top:6px;">ConsultaPage.tsx — 33 KB (página mais complexa)</p>
+        </div>
+        <div class="card card-accent">
+          <h3>📊 Painel Corporativo</h3>
+          <p>Dashboard com as 20 rotas corporativas. KPIs agregados, status por rota, atualização periódica.</p>
+          <p class="small" style="margin-top:6px;">PainelPage.tsx — 13 KB</p>
+        </div>
+      </div>
+      <div class="card-grid grid-2 animate-in delay-2">
+        <div class="card">
+          <h3>Stack Frontend</h3>
+          <ul class="clean">
+            <li>React 18 com TypeScript</li>
+            <li>Vite como bundler</li>
+            <li>55+ componentes em src/app/components</li>
+            <li>Deploy via Vercel (vercel.json configurado)</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>Funcionalidades Visuais</h3>
+          <ul class="clean">
+            <li>Cards com flip 3D para detalhes</li>
+            <li>Tooltips em segmentos do mapa</li>
+            <li>Filtros interativos por status</li>
+            <li>Gauges SVG dinâmicos</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== SLIDE 14: HOJE VS FUTURO ===== -->
+  <section class="slide" data-slide="14">
+    <div class="slide-inner">
+      <h2 class="animate-in">Estado Atual vs Evolução Planejada</h2>
+      <div class="compare-cols animate-in delay-1">
+        <div class="compare-col" style="background:var(--accent-light);border:2px solid var(--accent);">
+          <h3 style="color:var(--accent);text-align:center;">✅ IMPLEMENTADO E FUNCIONAL</h3>
+          <ul class="clean check">
+            <li>Consulta on-demand com Google + HERE</li>
+            <li>Status em 4 níveis com merge dual-source</li>
+            <li>Mapa interativo com rota colorida + incidentes</li>
+            <li>Exportação Excel/CSV estilizada</li>
+            <li>Favoritos e rotas predefinidas</li>
+            <li>Painel corporativo com 20 rotas</li>
+            <li>Cache inteligente (TTL 5 min)</li>
+            <li>Autenticação local com HMAC</li>
+            <li>Persistência no Supabase</li>
+            <li>Frontend React/TS com deploy Vercel</li>
+            <li>Modo caminhão (HERE Routing Truck)</li>
+          </ul>
+        </div>
+        <div class="compare-col" style="background:var(--green-light);border:2px solid var(--green);">
+          <h3 style="color:var(--green);text-align:center;">🚀 PRÓXIMAS EVOLUÇÕES</h3>
+          <ul class="clean">
+            <li>Migração de auth para Supabase Auth</li>
+            <li>Alertas por e-mail/SMS em mudança de status</li>
+            <li>Histórico de tráfego ao longo do dia/semana</li>
+            <li>Circuit breaker para APIs externas</li>
+            <li>Cache persistente (Redis ou disco)</li>
+            <li>Worker de monitoramento agendado (cron)</li>
+            <li>Relatórios mensais de desempenho</li>
+            <li>Integração direta com TMS/ERP</li>
+            <li>Predição de tráfego com dados históricos</li>
+            <li>Melhoria do threat model de segurança</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== SLIDE 15: RESUMO EXECUTIVO ===== -->
+  <section class="slide" data-slide="15">
+    <div class="slide-inner">
+      <h2 class="animate-in" style="text-align:center;">Resumo Executivo</h2>
+      <div class="card-grid grid-2 animate-in delay-1" style="margin:20px 0;">
+        <div class="card" style="border-top:4px solid var(--accent);">
+          <h3 style="color:var(--accent);">O QUE É</h3>
+          <p>Sistema web de monitoramento de rotas rodoviárias em tempo real, com backend FastAPI e frontend React,
+            consumindo Google Routes + HERE Maps em paralelo.</p>
+        </div>
+        <div class="card" style="border-top:4px solid var(--green);">
+          <h3 style="color:var(--green);">O QUE ENTREGA</h3>
+          <p>Status de tráfego padronizado, atraso em minutos, incidentes filtrados, mapa visual, exportação, painel
+            corporativo e indicador de confiança dos dados.</p>
+        </div>
+        <div class="card" style="border-top:4px solid var(--yellow);">
+          <h3 style="color:var(--yellow);">QUANTO CUSTA</h3>
+          <p style="margin-bottom:10px;">Para <strong>20 rotas atualizadas a cada hora, 24/7:</strong></p>
+          <div class="highlight-box green-box" style="margin:0;padding:10px;">
+            <span class="number-medium" style="color:var(--green);">~R$ 589 / mês</span>
+          </div>
+          <p class="small" style="margin-top:6px;">Uso esporádico: dentro das franquias = <strong
+              style="color:var(--green);">R$ 0,00/mês</strong></p>
+        </div>
+        <div class="card" style="border-top:4px solid var(--orange);">
+          <h3 style="color:var(--orange);">DECISÕES PENDENTES</h3>
+          <div class="step">
+            <div class="step-num">1</div>
+            <div>Definir rotas e frequência de monitoramento</div>
+          </div>
+          <div class="step">
+            <div class="step-num">2</div>
+            <div>Aprovar orçamento de APIs (~R$ 590/mês)</div>
+          </div>
+          <div class="step">
+            <div class="step-num">3</div>
+            <div>Priorizar migração de autenticação</div>
+          </div>
+          <div class="step">
+            <div class="step-num">4</div>
+            <div>Treinar equipe operacional</div>
+          </div>
+        </div>
+      </div>
+      <p class="small animate-in delay-2" style="text-align:center;margin-top:12px;">Sistema em produção &nbsp;·&nbsp;
+        Versão 2.0 &nbsp;·&nbsp; Março 2026</p>
+    </div>
+  </section>
+
+  <!-- ===== NAVIGATION BAR ===== -->
+  <div class="nav-bar">
+    <button class="nav-btn" id="btn-prev" onclick="goTo(current-1)">← Anterior</button>
+    <div class="progress-track">
+      <div class="progress-fill" id="progress"></div>
+    </div>
+    <span class="slide-counter" id="counter">1 / 15</span>
+    <button class="nav-btn" id="btn-next" onclick="goTo(current+1)">Próximo →</button>
+  </div>
+
+  <script>
+    const slides = document.querySelectorAll('.slide');
+    const total = slides.length;
+    let current = 0;
+
+    function goTo(n) {
+      if (n < 0 || n >= total) return;
+      slides[current].classList.remove('active');
+      current = n;
+      slides[current].classList.add('active');
+      document.getElementById('progress').style.width = ((current + 1) / total * 100) + '%';
+      document.getElementById('counter').textContent = (current + 1) + ' / ' + total;
+      document.getElementById('btn-prev').disabled = current === 0;
+      document.getElementById('btn-next').disabled = current === total - 1;
+    }
+
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') { e.preventDefault(); goTo(current + 1); }
+      if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); goTo(current - 1); }
+      if (e.key === 'Home') { e.preventDefault(); goTo(0); }
+      if (e.key === 'End') { e.preventDefault(); goTo(total - 1); }
+    });
+
+    let touchStartX = 0;
+    document.addEventListener('touchstart', function (e) { touchStartX = e.changedTouches[0].screenX; });
+    document.addEventListener('touchend', function (e) {
+      const diff = e.changedTouches[0].screenX - touchStartX;
+      if (Math.abs(diff) > 50) { diff > 0 ? goTo(current - 1) : goTo(current + 1); }
+    });
+
+    goTo(0);
+  </script>
+</body>
+
+</html>

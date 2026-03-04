@@ -1,0 +1,1474 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Projeto Zero — Consulta de Rotas</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: #f0f4f8;
+      color: #2d3748;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* ===== Header ===== */
+    header {
+      background: linear-gradient(135deg, #0f4c81 0%, #1a6bb5 100%);
+      color: #fff;
+      padding: 11px 24px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      box-shadow: 0 2px 8px rgba(0,0,0,.25);
+      flex-shrink: 0;
+      z-index: 1001;
+    }
+    header h1 { font-size: 1.15rem; font-weight: 700; }
+    header .sub { font-size: .76rem; opacity: .8; margin-top: 1px; }
+
+    /* ===== Layout ===== */
+    #app { display: flex; flex: 1; overflow: hidden; }
+
+    /* ===== Painel esquerdo ===== */
+    #panel {
+      width: 480px;
+      flex-shrink: 0;
+      overflow-y: auto;
+      overflow-x: hidden;
+      background: #f0f4f8;
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      border-right: 1px solid #e2e8f0;
+    }
+
+    /* ===== Mapa ===== */
+    #map-container { flex: 1; position: relative; min-width: 0; }
+    #map { width: 100%; height: 100%; }
+
+    /* Barra de modo O/D */
+    #map-mode-bar {
+      position: absolute;
+      top: 10px; left: 50%; transform: translateX(-50%);
+      z-index: 1000;
+      display: flex; gap: 6px;
+      background: rgba(255,255,255,.96);
+      padding: 6px 10px; border-radius: 24px;
+      box-shadow: 0 2px 10px rgba(0,0,0,.2);
+      white-space: nowrap;
+    }
+    .mode-btn {
+      padding: 4px 14px; border: 2px solid #e2e8f0; border-radius: 16px;
+      font-size: .78rem; font-weight: 600; cursor: pointer;
+      background: #fff; color: #4a5568; transition: all .15s;
+    }
+    .mode-btn.ativo-o  { background: #27ae60; color: #fff; border-color: #1e8449; }
+    .mode-btn.ativo-d  { background: #e74c3c; color: #fff; border-color: #c0392b; }
+    .mode-btn:not(.ativo-o):not(.ativo-d):hover { background: #e2e8f0; }
+
+    /* Badge método de busca */
+    #map-metodo {
+      position: absolute; bottom: 28px; right: 10px;
+      z-index: 1000;
+      background: rgba(255,255,255,.93); padding: 4px 12px;
+      border-radius: 12px; font-size: .7rem; color: #4a5568; font-weight: 600;
+      box-shadow: 0 1px 4px rgba(0,0,0,.15);
+    }
+
+    /* ===== Legenda do mapa ===== */
+    #map-legend {
+      position: absolute; bottom: 60px; right: 10px;
+      z-index: 1000;
+      background: rgba(255,255,255,.95);
+      padding: 8px 12px; border-radius: 8px;
+      box-shadow: 0 1px 6px rgba(0,0,0,.18);
+      font-size: .7rem; min-width: 120px;
+    }
+    #map-legend .leg-title {
+      font-weight: 700; color: #2d3748; margin-bottom: 5px;
+      font-size: .72rem; text-transform: uppercase; letter-spacing: .5px;
+    }
+    .leg-row { display: flex; align-items: center; gap: 5px; margin-bottom: 3px; }
+    .leg-dot {
+      width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0;
+    }
+
+    /* ===== Cards ===== */
+    .card {
+      background: #fff; border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,.07);
+      padding: 16px 18px;
+    }
+    .card h2 {
+      font-size: .9rem; color: #0f4c81; margin-bottom: 12px; font-weight: 700;
+      padding-bottom: 8px; border-bottom: 1px solid #edf2f7;
+    }
+
+    /* ===== Form ===== */
+    .form-row { display: flex; gap: 8px; }
+    .form-group { flex: 1; }
+    label { display: block; font-size: .74rem; font-weight: 600; color: #4a5568; margin-bottom: 3px; }
+    input[type="text"], select {
+      width: 100%; padding: 9px 11px;
+      border: 1.5px solid #cbd5e0; border-radius: 7px;
+      font-size: .84rem; outline: none; background: #fff;
+      transition: border-color .2s, box-shadow .2s;
+    }
+    input:focus, select:focus { border-color: #0f4c81; box-shadow: 0 0 0 3px rgba(15,76,129,.1); }
+    input.is-origem { border-color: #27ae60 !important; }
+    input.is-destino { border-color: #e74c3c !important; }
+
+    /* ===== Botões ===== */
+    .btn {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 7px 14px; border: none; border-radius: 6px;
+      font-size: .82rem; font-weight: 600; cursor: pointer;
+      transition: opacity .15s, transform .1s; text-decoration: none;
+    }
+    .btn:active { transform: scale(.97); }
+    .btn:disabled { opacity: .5; cursor: not-allowed; }
+    .btn-primary { background: #0f4c81; color: #fff; }
+    .btn-primary:hover:not(:disabled) { background: #0c3d6a; }
+    .btn-secondary { background: #e2e8f0; color: #2d3748; }
+    .btn-secondary:hover:not(:disabled) { background: #cbd5e0; }
+    .btn-sm { padding: 5px 10px; font-size: .76rem; }
+    .btn-row { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 9px; }
+
+    /* ===== Spinner ===== */
+    .spinner-wrap { text-align: center; padding: 16px 0; }
+    .spinner {
+      width: 32px; height: 32px;
+      border: 3px solid #e2e8f0; border-top-color: #0f4c81;
+      border-radius: 50%; animation: spin .7s linear infinite; margin: 0 auto 7px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .spinner-wrap p { color: #718096; font-size: .8rem; }
+
+    /* ===== Status badges ===== */
+    .badge {
+      display: inline-block; padding: 2px 10px; border-radius: 20px;
+      font-weight: 700; font-size: .78rem;
+    }
+    .badge-normal   { background: #d5f5e3; color: #1e8449; }
+    .badge-moderado { background: #fef9e7; color: #9a7d0a; }
+    .badge-intenso  { background: #fdedec; color: #b03a2e; }
+    .badge-parado   { background: #922b21; color: #fff; }
+    .badge-semdados { background: #e5e7e9; color: #5d6d7e; }
+
+    /* ===== Status de fontes (Google vs HERE) ===== */
+    .fontes-row {
+      display: flex; gap: 6px; flex-wrap: wrap; align-items: center;
+      margin-bottom: 8px;
+    }
+    .fonte-status {
+      display: flex; align-items: center; gap: 5px;
+      background: #f7fafc; border: 1px solid #e2e8f0;
+      border-radius: 8px; padding: 4px 10px; font-size: .74rem;
+    }
+    .fonte-status .nome { color: #718096; font-weight: 600; }
+
+    /* ===== Result card ===== */
+    #result-card { display: none; flex-direction: column; gap: 10px; }
+    .result-header {
+      display: flex; align-items: flex-start;
+      justify-content: space-between; gap: 8px; margin-bottom: 10px;
+    }
+    .result-rota { font-size: .87rem; font-weight: 600; color: #2d3748; word-wrap: break-word; white-space: normal; line-height: 1.35; }
+    .result-meta { font-size: .69rem; color: #718096; margin-top: 2px; }
+
+    .metrics-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr);
+      gap: 6px; margin-bottom: 6px;
+    }
+    .metric {
+      position: relative;
+      background: #f7fafc; border: 1px solid #e2e8f0;
+      border-radius: 8px; padding: 10px 8px 8px; text-align: center;
+    }
+    .metric .val { font-size: 1rem; font-weight: 700; color: #0f4c81; }
+    .metric .lbl { font-size: .65rem; color: #718096; margin-top: 3px; line-height: 1.3; }
+
+    /* ===== Info Icon + Tooltip ===== */
+    .info-icon {
+      position: absolute; top: 4px; right: 5px;
+      width: 15px; height: 15px; border-radius: 50%;
+      background: #e2e8f0; color: #718096;
+      font-size: .58rem; font-weight: 700; font-style: normal;
+      line-height: 15px; text-align: center;
+      cursor: help; transition: background .2s, color .2s; z-index: 10;
+    }
+    .info-icon:hover { background: #0f4c81; color: #fff; }
+    .info-icon::after {
+      content: attr(data-tooltip);
+      position: absolute; bottom: calc(100% + 6px); right: 0; transform: translateY(4px);
+      min-width: 170px; max-width: 210px;
+      padding: 8px 10px; background: #2d3748; color: #fff;
+      font-size: .68rem; font-weight: 400; line-height: 1.45;
+      border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,.25);
+      white-space: normal; text-align: left;
+      pointer-events: none; opacity: 0;
+      transition: opacity .2s, transform .2s;
+      z-index: 100;
+    }
+    .info-icon::before {
+      content: ''; position: absolute;
+      bottom: calc(100% + 2px); right: 2px;
+      border: 5px solid transparent; border-top-color: #2d3748;
+      pointer-events: none; opacity: 0; transition: opacity .2s; z-index: 100;
+    }
+    .info-icon:hover::after { opacity: 1; transform: translateY(0); }
+    .info-icon:hover::before { opacity: 1; }
+
+    /* ===== Metrics Section Labels ===== */
+    .metrics-section-label {
+      font-size: .65rem; font-weight: 700; color: #a0aec0;
+      text-transform: uppercase; letter-spacing: .8px;
+      margin-bottom: 4px; padding-left: 2px;
+    }
+
+    /* ===== Contextual Metric Colors ===== */
+    .metric-good { border-left: 3px solid #27ae60; background: #f0faf4; }
+    .metric-warn { border-left: 3px solid #f39c12; background: #fffdf5; }
+    .metric-bad  { border-left: 3px solid #e74c3c; background: #fef5f5; }
+    .metric-good .val { color: #1e8449; }
+    .metric-warn .val { color: #9a7d0a; }
+    .metric-bad  .val { color: #b03a2e; }
+
+    /* ===== Confidence Section ===== */
+    .conf-section {
+      padding: 8px 10px; background: #f7fafc;
+      border-radius: 7px; border: 1px solid #e2e8f0;
+    }
+    .conf-header {
+      display: flex; align-items: center; gap: 4px; margin-bottom: 5px;
+    }
+    .conf-label { font-size: .72rem; font-weight: 600; color: #4a5568; }
+    .conf-value { margin-left: auto; font-size: .75rem; font-weight: 700; }
+    .conf-scale {
+      display: flex; justify-content: space-between;
+      font-size: .58rem; color: #a0aec0; margin-top: 2px;
+    }
+
+    /* ===== Incidents Header ===== */
+    .incidents-header {
+      display: flex; align-items: center; gap: 6px;
+      font-size: .82rem; font-weight: 700; color: #0f4c81;
+      margin-bottom: 8px; padding-bottom: 6px;
+      border-bottom: 1px solid #edf2f7;
+    }
+    .incidents-count {
+      background: #ebf4ff; color: #2b6cb0;
+      padding: 1px 8px; border-radius: 10px;
+      font-size: .68rem; font-weight: 600;
+    }
+
+    /* ===== Form Step Indicator ===== */
+    .form-step-num {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 18px; height: 18px; border-radius: 50%;
+      background: #0f4c81; color: #fff;
+      font-size: .62rem; font-weight: 700; flex-shrink: 0;
+    }
+
+    /* ===== Incidentes (lista no painel) ===== */
+    .inc-item {
+      border-left: 3px solid #e2e8f0;
+      padding: 5px 10px; margin-bottom: 5px;
+      border-radius: 0 5px 5px 0; background: #f7fafc;
+    }
+    .inc-item.critica { border-left-color: #922b21; }
+    .inc-item.alta    { border-left-color: #e74c3c; }
+    .inc-item.media   { border-left-color: #f39c12; }
+    .inc-item.baixa   { border-left-color: #27ae60; }
+    .inc-cat   { font-weight: 700; font-size: .79rem; }
+    .inc-desc  { color: #4a5568; margin-top: 2px; font-size: .73rem; }
+    .inc-road  { color: #718096; font-size: .7rem; }
+
+    /* ===== Toasts de incidentes no MAPA ===== */
+    .inc-toast-wrap { /* wrapper transparente do divIcon */ }
+    .inc-toast {
+      display: inline-flex; align-items: center; gap: 5px;
+      background: #fff;
+      border-left: 4px solid;
+      border-radius: 0 20px 20px 0;
+      padding: 4px 10px 4px 7px;
+      box-shadow: 0 2px 10px rgba(0,0,0,.28);
+      white-space: nowrap;
+      cursor: pointer;
+      font-size: 11px; font-weight: 700;
+      font-family: 'Segoe UI', Arial, sans-serif;
+      transform: translateY(-50%);
+      transition: transform .12s, box-shadow .12s;
+      user-select: none;
+      pointer-events: auto;
+    }
+    .inc-toast:hover {
+      transform: translateY(-50%) scale(1.07);
+      box-shadow: 0 4px 16px rgba(0,0,0,.36);
+    }
+    .inc-toast.fechada {
+      background: repeating-linear-gradient(
+        -45deg, #fff 0 4px, #fff5f5 4px 8px
+      );
+    }
+    .inc-toast-icon { font-size: 15px; line-height: 1; }
+    .inc-toast-text { font-size: 10.5px; letter-spacing: .2px; }
+    .inc-toast-closed {
+      font-size: 9px; font-weight: 800;
+      color: #922b21; margin-left: 2px;
+    }
+
+    /* ===== Pinos numerados via ===== */
+    .via-pin {
+      width: 22px; height: 22px;
+      background: #1a1a1a; color: #fff;
+      border-radius: 50%; border: 2px solid #fff;
+      font-size: 10px; font-weight: bold;
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.5);
+    }
+
+    /* ===== Outros chips ===== */
+    .fonte-chip {
+      display: inline-block; background: #ebf4ff; color: #2b6cb0;
+      padding: 1px 8px; border-radius: 10px;
+      font-size: .7rem; margin: 2px; font-weight: 500;
+    }
+    .cache-badge {
+      background: #ebf8ff; color: #2b6cb0;
+      padding: 1px 8px; border-radius: 10px;
+      font-size: .68rem; font-weight: 600;
+    }
+
+    .error-box {
+      background: #fff5f5; border: 1px solid #feb2b2;
+      border-radius: 8px; padding: 10px 14px;
+      color: #c53030; font-size: .82rem;
+    }
+
+    .conf-bar { height: 8px; border-radius: 4px; background: #e2e8f0; overflow: hidden; margin-top: 3px; }
+    .conf-bar-fill { height: 100%; border-radius: 4px; transition: width .5s ease; }
+
+    /* ===== Visão Geral Overlay ===== */
+    #vg-overlay {
+      position: fixed; inset: 0; z-index: 2000;
+      background: rgba(10,20,45,.62);
+      display: flex; align-items: flex-start; justify-content: center;
+      padding: 20px; overflow-y: auto;
+    }
+    #vg-modal {
+      background: #fff; border-radius: 14px;
+      box-shadow: 0 16px 56px rgba(0,0,0,.38);
+      width: 100%; max-width: 1140px;
+      padding: 22px 26px; margin-bottom: 20px;
+    }
+    #vg-header {
+      display: flex; justify-content: space-between; align-items: flex-start;
+      margin-bottom: 14px; padding-bottom: 12px;
+      border-bottom: 2px solid #edf2f7;
+    }
+    #vg-header h2 { font-size: 1.05rem; color: #0f4c81; font-weight: 700; margin: 0; }
+    #vg-sub { font-size: .74rem; color: #718096; margin-top: 4px; }
+    #vg-resumo { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
+    #vg-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(228px, 1fr));
+      gap: 10px;
+    }
+    .vg-card {
+      border: 1.5px solid #e2e8f0; border-left-width: 4px; border-radius: 10px;
+      padding: 11px 13px; cursor: pointer; background: #fff;
+      transition: box-shadow .15s, transform .12s;
+    }
+    .vg-card:hover { box-shadow: 0 4px 18px rgba(0,0,0,.14); transform: translateY(-2px); }
+    .vg-card-id { font-size: .64rem; font-weight: 700; color: #a0aec0; text-transform: uppercase; letter-spacing: .6px; }
+    .vg-card-rota { font-size: .81rem; font-weight: 600; color: #2d3748; margin: 4px 0 7px; line-height: 1.35; }
+    .vg-card-metrics { display: flex; gap: 8px; flex-wrap: wrap; }
+    .vg-card-metric { font-size: .71rem; color: #4a5568; }
+    .vg-card-erro { font-size: .71rem; color: #c53030; margin-top: 4px; }
+    .btn-header {
+      background: rgba(255,255,255,.16); color: #fff;
+      border: 1.5px solid rgba(255,255,255,.38);
+      padding: 6px 14px; border-radius: 6px;
+      font-size: .8rem; font-weight: 600; cursor: pointer;
+      transition: background .15s;
+    }
+    .btn-header:hover { background: rgba(255,255,255,.28); }
+    #btn-explosao {
+      background: linear-gradient(135deg, #1a5276, #2471a3);
+    }
+    #btn-explosao:hover {
+      background: linear-gradient(135deg, #154360, #1a6bb5);
+    }
+    #vg-restore-btn {
+      position: fixed; bottom: 20px; right: 20px; z-index: 1999;
+      box-shadow: 0 4px 20px rgba(0,0,0,.25);
+      border-radius: 10px;
+    }
+    #vg-restore-btn .btn { white-space: nowrap; }
+
+    /* Responsivo */
+    @media (max-width: 900px) {
+      #panel { width: 380px; padding: 10px; }
+      .metrics-grid { grid-template-columns: repeat(3, 1fr); gap: 4px; }
+      .metric { padding: 8px 5px 6px; }
+      .metric .val { font-size: .88rem; }
+      .metric .lbl { font-size: .58rem; }
+    }
+    @media (max-width: 768px) {
+      #app { flex-direction: column; }
+      #panel { width: 100%; height: auto; max-height: 55vh; border-right: none; border-bottom: 1px solid #e2e8f0; }
+      #map-container { flex: 1; min-height: 45vh; }
+      .metrics-grid { grid-template-columns: repeat(3, 1fr); }
+    }
+    @media (max-width: 480px) {
+      #panel { padding: 8px; }
+      .form-row { flex-direction: column; }
+      .metric .val { font-size: .85rem; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>&#128205; RodoviaMonitor On-Demand</h1>
+  </div>
+  <button class="btn-header" onclick="abrirVisaoGeral()" style="margin-left:auto;">
+    &#128202; Visão Geral
+  </button>
+  <button id="btn-explosao" class="btn-header" onclick="abrirExplosaoRotas()"
+    title="Renderiza todas as 20 rotas predefinidas no mapa simultaneamente">
+    &#127757; Explodir Rotas
+  </button>
+</header>
+
+<div id="app">
+
+  <!-- ===== Painel ===== -->
+  <div id="panel">
+
+    <!-- Form -->
+    <div class="card">
+      <h2>&#128269; Consultar Rota</h2>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="origem"><span class="form-step-num">1</span> Origem</label>
+          <input type="text" id="origem" placeholder="Endereço ou clique no mapa" autocomplete="off" />
+        </div>
+        <div class="form-group">
+          <label for="destino"><span class="form-step-num">2</span> Destino</label>
+          <input type="text" id="destino" placeholder="Endereço ou clique no mapa" autocomplete="off" />
+        </div>
+      </div>
+      <div style="margin-top:8px;">
+        <label for="fav-sel">Carregar favorito</label>
+        <select id="fav-sel"><option value="">— Selecione —</option></select>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-primary" id="btn-consultar" onclick="consultar()">&#9193; Consultar</button>
+        <button class="btn btn-secondary btn-sm" onclick="salvarFav()">&#9733; Favorito</button>
+        <button class="btn btn-secondary btn-sm" onclick="limparMapa()">&#10006; Limpar</button>
+      </div>
+    </div>
+
+    <!-- Spinner -->
+    <div id="spinner" class="spinner-wrap" style="display:none;">
+      <div class="spinner"></div>
+      <p>Consultando tráfego em tempo real...</p>
+    </div>
+
+    <!-- Erro -->
+    <div id="error-box" class="error-box" style="display:none;"></div>
+
+    <!-- Resultado -->
+    <div class="card" id="result-card">
+
+      <div class="result-header">
+        <div>
+          <div class="result-rota" id="res-rota"></div>
+          <div class="result-meta" id="res-meta"></div>
+        </div>
+        <div style="display:flex;align-items:center;gap:5px;flex-shrink:0;">
+          <span id="res-cache"></span>
+          <span id="res-badge" class="badge"></span>
+        </div>
+      </div>
+
+      <!-- Status Google vs HERE -->
+      <div class="fontes-row" id="res-fontes-status"></div>
+
+      <!-- Métricas -->
+      <div id="res-metrics"></div>
+
+      <!-- Confiança -->
+      <div id="res-conf" style="margin-bottom:8px;"></div>
+
+      <!-- Botões de ação -->
+      <div class="btn-row" id="res-actions"></div>
+
+      <!-- Incidentes -->
+      <div id="res-incs" style="margin-top:10px;"></div>
+
+    </div>
+
+  </div><!-- /panel -->
+
+  <!-- ===== Mapa ===== -->
+  <div id="map-container">
+    <div id="map"></div>
+
+    <div id="map-mode-bar">
+      <button class="mode-btn ativo-o" id="btn-mo" onclick="setModo('o')">&#128205; Definir Origem</button>
+      <button class="mode-btn" id="btn-md" onclick="setModo('d')">&#128205; Definir Destino</button>
+    </div>
+
+    <!-- Legenda -->
+    <div id="map-legend">
+      <div class="leg-title">&#127950; Tráfego</div>
+      <div class="leg-row"><div class="leg-dot" style="background:#27ae60;"></div> Normal</div>
+      <div class="leg-row"><div class="leg-dot" style="background:#f39c12;"></div> Moderado</div>
+      <div class="leg-row"><div class="leg-dot" style="background:#e67e22;"></div> Intenso</div>
+      <div class="leg-row"><div class="leg-dot" style="background:#c0392b;"></div> Parado</div>
+      <div class="leg-row"><div class="leg-dot" style="background:#3498db;"></div> Sem dado</div>
+      <div class="leg-title" style="margin-top:7px;">&#9888;&#65039; Incidentes</div>
+      <div class="leg-row"><span style="font-size:12px;">&#128682;</span> Interdição</div>
+      <div class="leg-row"><span style="font-size:12px;">&#9888;&#65039;</span> Bloqueio Parcial</div>
+      <div class="leg-row"><span style="font-size:12px;">&#128165;</span> Colisão</div>
+      <div class="leg-row"><span style="font-size:12px;">&#128296;</span> Obras</div>
+      <div class="leg-row"><span style="font-size:12px;">&#128034;</span> Tráfego</div>
+      <div class="leg-row"><span style="font-size:12px;">&#9928;&#65039;</span> Clima</div>
+    </div>
+
+    <!-- Badge método -->
+    <div id="map-metodo" style="display:none;"></div>
+  </div>
+
+</div><!-- /app -->
+
+<!-- ===== Visão Geral Overlay ===== -->
+<div id="vg-overlay" style="display:none;">
+  <div id="vg-modal">
+    <div id="vg-header">
+      <div>
+        <h2>&#128202; Visão Geral &mdash; Todas as Rotas</h2>
+        <div id="vg-sub">Carregando...</div>
+      </div>
+      <div id="vg-actions" style="display:flex;gap:8px;align-items:center;flex-shrink:0;">
+        <a href="/visao-geral/exportar/excel" class="btn btn-secondary btn-sm" id="vg-btn-excel" style="display:none;">&#128196; Excel</a>
+        <a href="/visao-geral/exportar/csv" class="btn btn-secondary btn-sm" id="vg-btn-csv" style="display:none;">&#128202; CSV</a>
+        <button class="btn btn-secondary btn-sm" onclick="abrirVisaoGeral()">&#8635; Atualizar</button>
+        <button class="btn btn-secondary btn-sm" onclick="minimizarVisaoGeral()">&#128469; Minimizar</button>
+        <button class="btn btn-secondary btn-sm" onclick="fecharVisaoGeral()">&#10006; Fechar</button>
+      </div>
+    </div>
+    <div id="vg-resumo" style="display:none;"></div>
+    <div id="vg-spinner" class="spinner-wrap" style="display:none;">
+      <div class="spinner"></div>
+      <p>Consultando todas as rotas em paralelo&hellip;</p>
+    </div>
+    <div id="vg-grid" style="display:none;"></div>
+  </div>
+</div>
+
+<div id="vg-restore-btn" style="display:none;">
+  <button class="btn btn-primary" onclick="restaurarVisaoGeral()">&#128202; Restaurar Visão Geral</button>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+// ============================================================
+// Constantes de cor e ícone por categoria
+// ============================================================
+const INC_COLORS = {
+  'Interdição':        '#922b21',
+  'Bloqueio Parcial':  '#d68910',
+  'Colisão':           '#e74c3c',
+  'Obras na Pista':    '#e67e22',
+  'Engarrafamento':    '#e6b800',
+  'Condição Climática':'#2980b9',
+  'Ocorrência':        '#7f8c8d',
+};
+
+const INC_ICONS = {
+  'Interdição':        '&#128682;',
+  'Bloqueio Parcial':  '&#9888;&#65039;',
+  'Colisão':           '&#128165;',
+  'Obras na Pista':    '&#128296;',
+  'Engarrafamento':    '&#128034;',
+  'Condição Climática':'&#9928;&#65039;',
+  'Ocorrência':        '&#9888;&#65039;',
+};
+
+// Label curto para o toast (cabe no badge)
+const INC_SHORT = {
+  'Interdição':        'Interdição',
+  'Bloqueio Parcial':  'Bloq. Parcial',
+  'Colisão':           'Colisão',
+  'Obras na Pista':    'Obras',
+  'Engarrafamento':    'Tráfego',
+  'Condição Climática':'Clima',
+  'Ocorrência':        'Ocorrência',
+};
+
+const STATUS_COLORS = {
+  'Normal':   '#27ae60',
+  'Moderado': '#f39c12',
+  'Intenso':  '#e67e22',
+  'Parado':   '#c0392b',
+};
+
+// Cor baseada no jam factor do HERE Flow
+// jam < 1 = Livre (dado válido da API) → verde. Azul só para ausência real de dados.
+function jamColor(jf) {
+  if (jf >= 8) return '#c0392b';
+  if (jf >= 6) return '#e67e22';
+  if (jf >= 3) return '#f39c12';
+  if (jf >= 1) return '#27ae60';
+  return '#27ae60'; // verde = Livre (jam < 1 é dado válido de tráfego fluido)
+}
+
+// ============================================================
+// Mapa Leaflet
+// ============================================================
+const map = L.map('map', { zoomControl: true }).setView([-15.78, -47.93], 5);
+
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  attribution: '&copy; <a href="https://openstreetmap.org">OpenStreetMap</a>',
+  maxZoom: 19,
+}).addTo(map);
+
+// Canvas renderer para performance nos flow dots
+const _cvs = L.canvas({ padding: 0.2 });
+
+let _mO       = null;  // marcador origem
+let _mD       = null;  // marcador destino
+let _mRota    = null;  // camada da rota
+let _mFlow    = null;  // camada dos flow dots
+let _mIncs    = null;  // camada dos toasts de incidentes
+let _mVia     = null;  // camada dos pinos numerados via
+let _mExplosao= null;  // L.featureGroup com todas as rotas da explosão
+let _modo     = 'o';   // 'o' | 'd'
+
+function setModo(m) {
+  _modo = m;
+  document.getElementById('btn-mo').className = 'mode-btn' + (m === 'o' ? ' ativo-o' : '');
+  document.getElementById('btn-md').className = 'mode-btn' + (m === 'd' ? ' ativo-d' : '');
+}
+
+function _rm(l) { if (l) try { map.removeLayer(l); } catch(_) {} }
+
+map.on('click', function(e) {
+  const lat = e.latlng.lat.toFixed(6);
+  const lng = e.latlng.lng.toFixed(6);
+  const coord = lat + ',' + lng;
+
+  if (_modo === 'o') {
+    document.getElementById('origem').value = coord;
+    document.getElementById('origem').className = 'is-origem';
+    _rm(_mO);
+    _mO = L.circleMarker([+lat, +lng], {
+      radius: 10, color: '#1e8449', fillColor: '#27ae60', fillOpacity: 1, weight: 2,
+    }).addTo(map).bindPopup('<b>&#128994; Origem</b><br>' + coord);
+    setModo('d');
+  } else {
+    document.getElementById('destino').value = coord;
+    document.getElementById('destino').className = 'is-destino';
+    _rm(_mD);
+    _mD = L.circleMarker([+lat, +lng], {
+      radius: 10, color: '#c0392b', fillColor: '#e74c3c', fillOpacity: 1, weight: 2,
+    }).addTo(map).bindPopup('<b>&#128308; Destino</b><br>' + coord);
+    setModo('o');
+  }
+});
+
+function limparMapa() {
+  _rm(_mO); _mO = null;
+  _rm(_mD); _mD = null;
+  _rm(_mRota); _mRota = null;
+  _rm(_mVia); _mVia = null;
+  _rm(_mFlow); _mFlow = null;
+  _rm(_mIncs); _mIncs = null;
+  document.getElementById('origem').value  = '';
+  document.getElementById('destino').value = '';
+  document.getElementById('origem').className  = '';
+  document.getElementById('destino').className = '';
+  document.getElementById('map-metodo').style.display = 'none';
+  ocultarResultado();
+  esconderErro();
+  setModo('o');
+}
+
+// ============================================================
+// Toast marker (L.divIcon) para cada incidente
+// ============================================================
+function criarToastMarker(inc) {
+  const color  = inc.road_closed ? '#922b21' : (INC_COLORS[inc.categoria] || '#7f8c8d');
+  const icon   = INC_ICONS[inc.categoria]  || '&#9888;&#65039;';
+  const label  = INC_SHORT[inc.categoria]  || (inc.categoria || 'Ocorrência');
+  const closed = inc.road_closed;
+
+  const html =
+    '<div class="inc-toast' + (closed ? ' fechada' : '') + '" style="border-left-color:' + color + ';">' +
+    '<span class="inc-toast-icon">' + icon + '</span>' +
+    '<span class="inc-toast-text" style="color:' + color + ';">' + esc(label) + '</span>' +
+    (closed ? '<span class="inc-toast-closed">&#9940;FECHADA</span>' : '') +
+    '</div>';
+
+  const popupHtml =
+    '<div style="font-size:12px;min-width:190px;max-width:260px;">' +
+    '<b style="color:' + color + ';">' + icon + ' ' + esc(inc.categoria || '') + '</b>' +
+    (closed ? ' <span style="color:#922b21;font-weight:800;">&#9940; FECHADA</span>' : '') +
+    (inc.severidade ? ' <span style="color:#888;font-size:10px;">[' + esc(inc.severidade) + ']</span>' : '') +
+    (inc.rodovia_afetada ? '<div style="color:#888;font-size:10px;margin:3px 0 0;">&#128739; ' + esc(inc.rodovia_afetada) + '</div>' : '') +
+    '<div style="margin-top:5px;font-size:11px;color:#333;line-height:1.45;">' + esc((inc.descricao || '').slice(0, 200)) + '</div>' +
+    '</div>';
+
+  const divIcon = L.divIcon({
+    html,
+    className: 'inc-toast-wrap',
+    iconAnchor: [0, 0],        // Âncora no canto top-left do wrapper
+    iconSize:   null,          // Auto-size
+    popupAnchor:[10, -5],
+  });
+
+  return L.marker([inc.latitude, inc.longitude], {
+    icon: divIcon,
+    zIndexOffset: closed ? 300 : (inc.severidade_id === 4 ? 200 : 100),
+  }).bindPopup(popupHtml, { maxWidth: 280 });
+}
+
+// ============================================================
+// Renderização da rota no mapa
+// ============================================================
+function renderMapa(data) {
+  _rm(_mRota); _mRota = null;
+  _rm(_mFlow); _mFlow = null;
+  _rm(_mIncs); _mIncs = null;
+  _rm(_mVia);  _mVia  = null;
+  _rm(_mO);    _mO    = null;
+  _rm(_mD);    _mD    = null;
+
+  const bounds = [];
+  const status = data.status || 'Sem dados';
+  const routeColor = STATUS_COLORS[status] || '#3498db';
+
+  // --- 1. Polyline base da rota (colorida por status geral) ---
+  let fallbackLatlngs = null;  // usado para O/D e bounds quando não há geojson
+  const geojson = data.route_geojson;
+  if (geojson && geojson.geometry && geojson.geometry.coordinates.length > 1) {
+    const latlngs = geojson.geometry.coordinates.map(c => [c[1], c[0]]);
+    latlngs.forEach(ll => bounds.push(ll));
+
+    // Tooltip da rota com dados de tráfego
+    const ttip =
+      '<b style="color:' + routeColor + ';">' + esc(status) + '</b>' +
+      (data.velocidade_atual_kmh ? '<br>&#128241; ' + data.velocidade_atual_kmh + ' km/h' : '') +
+      (data.jam_factor_max       ? ' | Jam: ' + data.jam_factor_max.toFixed(1) : '') +
+      (data.atraso_min           ? '<br>&#9200; Atraso: +' + data.atraso_min + ' min' : '') +
+      '<br><span style="font-size:10px;color:#888;">Google: ' + esc(data.status_google || '—') + ' | HERE: ' + esc(data.status_here || '—') + '</span>';
+
+    const fpData = data.flow_pts || [];
+    if (fpData.length > 0) {
+      // Segmentos coloridos pelo jam factor do flow_pt mais próximo
+      const layers = [];
+      const glow = L.polyline(latlngs, { color: '#555', weight: 10, opacity: 0.1 });
+      glow.bindTooltip(ttip, { sticky: true, opacity: 0.97 });
+      layers.push(glow);
+
+      function _nearestJam(midLat, midLng) {
+        let best = null, bestD = Infinity;
+        for (const fp of fpData) {
+          const d = (fp.lat - midLat) ** 2 + (fp.lng - midLng) ** 2;
+          if (d < bestD) { bestD = d; best = fp; }
+        }
+        return best ? jamColor(best.jam) : routeColor;
+      }
+
+      let runStart = 0;
+      let runColor = _nearestJam(
+        (latlngs[0][0] + latlngs[1][0]) / 2,
+        (latlngs[0][1] + latlngs[1][1]) / 2
+      );
+      for (let i = 1; i < latlngs.length - 1; i++) {
+        const c = _nearestJam(
+          (latlngs[i][0] + latlngs[i + 1][0]) / 2,
+          (latlngs[i][1] + latlngs[i + 1][1]) / 2
+        );
+        if (c !== runColor) {
+          layers.push(L.polyline(latlngs.slice(runStart, i + 1), { color: runColor, weight: 4.5, opacity: 0.85 }));
+          runStart = i;
+          runColor = c;
+        }
+      }
+      layers.push(L.polyline(latlngs.slice(runStart), { color: runColor, weight: 4.5, opacity: 0.85 }));
+
+      _mRota = L.featureGroup(layers).addTo(map);
+    } else {
+      const glow = L.polyline(latlngs, { color: routeColor, weight: 10, opacity: 0.18 });
+      const line = L.polyline(latlngs, { color: routeColor, weight: 4.5, opacity: 0.85 });
+      line.bindTooltip(ttip, { sticky: true, opacity: 0.97 });
+      _mRota = L.featureGroup([glow, line]).addTo(map);
+    }
+  } else {
+    // Fallback: rota aproximada origem–destino quando HERE não retorna geometria
+    const pts = data.route_pts || [];
+    if (pts.length >= 2) {
+      fallbackLatlngs = pts.map(p => [p[0], p[1]]);
+    } else {
+      const o = _parseLatLng(data.origem);
+      const d = _parseLatLng(data.destino);
+      if (o && d) {
+        fallbackLatlngs = [[o.lat, o.lng], [d.lat, d.lng]];
+      }
+    }
+    if (fallbackLatlngs && fallbackLatlngs.length >= 2) {
+      fallbackLatlngs.forEach(ll => bounds.push(ll));
+      const line = L.polyline(fallbackLatlngs, {
+        color: routeColor, weight: 3.5, opacity: 0.6, dashArray: '8,8',
+      });
+      line.bindTooltip('<b>Rota aproximada</b> (origem–destino)<br><span style="font-size:10px;color:#888;">Geometria detalhada do HERE indisponível</span>', { sticky: true, opacity: 0.97 });
+      _mRota = L.featureGroup([line]).addTo(map);
+    }
+  }
+
+  // --- 2. Flow dots: coloração por segmento baseada no jam factor ---
+  const flowPts = data.flow_pts || [];
+  if (flowPts.length > 0) {
+    const dots = flowPts.map(pt =>
+      L.circleMarker([pt.lat, pt.lng], {
+        renderer: _cvs,
+        radius: 5,
+        color: jamColor(pt.jam),
+        fillColor: jamColor(pt.jam),
+        fillOpacity: 0.82,
+        weight: 0,
+        interactive: false,
+      })
+    );
+    _mFlow = L.featureGroup(dots).addTo(map);
+  }
+
+  // --- 3. Toast markers para cada incidente ---
+  const incLayers = [];
+  (data.incidentes || []).forEach(inc => {
+    if (inc.latitude == null || inc.longitude == null) return;
+    bounds.push([inc.latitude, inc.longitude]);
+    incLayers.push(criarToastMarker(inc));
+  });
+  if (incLayers.length) {
+    _mIncs = L.featureGroup(incLayers).addTo(map);
+  }
+
+  // --- 4. Marcadores de O/D ---
+  const pts = data.route_pts || [];
+  const odPts = (pts.length >= 2) ? [pts[0], pts[pts.length - 1]] : (fallbackLatlngs && fallbackLatlngs.length >= 2 ? [fallbackLatlngs[0], fallbackLatlngs[fallbackLatlngs.length - 1]] : null);
+  if (odPts) {
+    const o = odPts[0], d = odPts[1];
+    const oLat = Array.isArray(o) ? o[0] : o.lat, oLng = Array.isArray(o) ? o[1] : o.lng;
+    const dLat = Array.isArray(d) ? d[0] : d.lat, dLng = Array.isArray(d) ? d[1] : d.lng;
+    _mO = L.circleMarker([oLat, oLng], {
+      radius: 11, color: '#1e8449', fillColor: '#27ae60', fillOpacity: 1, weight: 2,
+    }).addTo(map).bindPopup('<b>&#128994; Origem</b><br>' + esc(data.origem));
+    _mD = L.circleMarker([dLat, dLng], {
+      radius: 11, color: '#c0392b', fillColor: '#e74c3c', fillOpacity: 1, weight: 2,
+    }).addTo(map).bindPopup('<b>&#128308; Destino</b><br>' + esc(data.destino));
+    bounds.push([oLat, oLng], [dLat, dLng]);
+  }
+
+  // --- 5. Pinos numerados nos waypoints intermediários ---
+  const viaCoords = data.via_coords || [];
+  if (viaCoords.length > 0) {
+    const viaLayers = viaCoords.map((pt, idx) =>
+      L.marker([pt.lat, pt.lng], {
+        icon: L.divIcon({
+          className: '',
+          html: '<div class="via-pin">' + (idx + 1) + '</div>',
+          iconSize: [22, 22],
+          iconAnchor: [11, 11],
+        }),
+        interactive: false,
+      })
+    );
+    _mVia = L.featureGroup(viaLayers).addTo(map);
+  }
+
+  // Ajusta zoom
+  if (bounds.length >= 2) {
+    try { map.fitBounds(L.latLngBounds(bounds).pad(0.08)); } catch(_) {}
+  }
+
+  // Badge método + fonte do trânsito
+  const badge = document.getElementById('map-metodo');
+  let badgeText = (data.metodo_busca === 'corridor')
+    ? '&#128249; Corridor (' + (data.route_pts || []).length + ' pts)'
+    : '&#9645; BBox fallback';
+  if (data.flow_fonte === 'google' && (data.flow_pts || []).length > 0) {
+    badgeText += ' &nbsp;| &#128663; Trânsito Google';
+  }
+  badge.innerHTML = badgeText;
+  badge.style.display = 'block';
+}
+
+// ============================================================
+// Utilitários
+// ============================================================
+function _parseLatLng(str) {
+  if (!str || typeof str !== 'string') return null;
+  const parts = str.trim().split(/[,\s]+/);
+  if (parts.length >= 2) {
+    const lat = parseFloat(parts[0]), lng = parseFloat(parts[1]);
+    if (!isNaN(lat) && !isNaN(lng) && lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180) {
+      return { lat, lng };
+    }
+  }
+  return null;
+}
+
+function esc(s) {
+  const d = document.createElement('div');
+  d.textContent = s || '';
+  return d.innerHTML;
+}
+
+function sClass(s) {
+  return { 'Normal':'normal','Moderado':'moderado','Intenso':'intenso','Parado':'parado' }[s] || 'semdados';
+}
+
+function fmtMin(m) {
+  if (!m && m !== 0) return '—';
+  if (m === 0) return '0 min';
+  if (m < 60) return m + ' min';
+  const h = Math.floor(m / 60), r = m % 60;
+  return r ? h + 'h ' + r + 'min' : h + 'h';
+}
+
+function fmtConsultadoEm(utcStr) {
+  if (!utcStr || utcStr === '—') return '—';
+  const dt = new Date(utcStr.trim() + 'Z');
+  if (isNaN(dt.getTime())) return utcStr;
+  return dt.toLocaleString('pt-BR', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
+}
+
+// ============================================================
+// Tooltips e helpers de métricas
+// ============================================================
+const METRIC_TOOLTIPS = {
+  'Atraso':            'Tempo extra estimado devido ao trânsito atual, comparando a duração normal com a duração real.',
+  'Com trânsito':      'Duração total estimada da viagem considerando as condições de trânsito em tempo real.',
+  'Sem trânsito':      'Duração estimada da viagem em condições ideais, sem congestionamento.',
+  'Velocidade':        'Velocidade média atual dos veículos ao longo da rota, medida pelo HERE Traffic.',
+  'Congestionamento':  'Nível máximo de congestionamento na rota (0 = livre, 10 = parado), baseado no Jam Factor do HERE.',
+  '% Congestionado':   'Percentual da rota que está com algum nível de congestionamento no momento.',
+};
+const CONF_TOOLTIP = 'Alta (90%): Ambas as fontes (Google e HERE) responderam com sucesso. Média (60%): Apenas uma das fontes respondeu. Baixa (20%): Nenhuma das fontes respondeu. Se o atraso for >= 90 min, a confiança é reduzida em 10% (possível anomalia nos dados).';
+
+function getMetricColorClass(lbl, d) {
+  if (lbl === 'Atraso') {
+    const v = d.atraso_min || 0;
+    if (v <= 5) return 'metric-good';
+    if (v <= 15) return 'metric-warn';
+    return 'metric-bad';
+  }
+  if (lbl === 'Congestionamento') {
+    const v = d.jam_factor_max || 0;
+    if (v < 3) return 'metric-good';
+    if (v < 6) return 'metric-warn';
+    return 'metric-bad';
+  }
+  if (lbl === '% Congestionado') {
+    const v = d.pct_congestionado || 0;
+    if (v < 20) return 'metric-good';
+    if (v < 50) return 'metric-warn';
+    return 'metric-bad';
+  }
+  if (lbl === 'Velocidade') {
+    const v = d.velocidade_atual_kmh || 0;
+    if (v === 0) return '';
+    if (v > 40) return 'metric-good';
+    if (v > 20) return 'metric-warn';
+    return 'metric-bad';
+  }
+  return '';
+}
+
+function buildMetricCard(m, d) {
+  const tooltip = METRIC_TOOLTIPS[m.lbl] || '';
+  const colorClass = getMetricColorClass(m.lbl, d);
+  return '<div class="metric ' + colorClass + '">' +
+    '<span class="info-icon" data-tooltip="' + esc(tooltip) + '">i</span>' +
+    '<div class="val">' + m.icon + ' ' + esc(m.val) + '</div>' +
+    '<div class="lbl">' + esc(m.lbl) + '</div>' +
+  '</div>';
+}
+
+// ============================================================
+// Favoritos
+// ============================================================
+async function carregarFavs() {
+  try {
+    const data = await (await fetch('/favoritos')).json();
+    const sel = document.getElementById('fav-sel');
+    sel.innerHTML = '<option value="">— Selecione —</option>';
+    (data.favoritos || []).forEach(f => {
+      const o = document.createElement('option');
+      o.value = JSON.stringify({ origem: f.origem, destino: f.destino, via: f.via || [] });
+      o.textContent = f.nome || f.origem + ' → ' + f.destino;
+      sel.appendChild(o);
+    });
+  } catch(e) { console.warn('Favoritos:', e); }
+}
+
+document.getElementById('fav-sel').addEventListener('change', function() {
+  if (!this.value) return;
+  const { origem, destino, via } = JSON.parse(this.value);
+  document.getElementById('origem').value  = origem;
+  document.getElementById('destino').value = destino;
+  _viaAtual = via || [];
+  this.value = '';
+});
+
+async function salvarFav() {
+  const o = document.getElementById('origem').value.trim();
+  const d = document.getElementById('destino').value.trim();
+  if (!o || !d) { alert('Preencha origem e destino.'); return; }
+  const nome = prompt('Nome do favorito:', o + ' → ' + d);
+  if (!nome) return;
+  try {
+    await fetch('/favoritos', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ nome, origem: o, destino: d }),
+    });
+    await carregarFavs();
+    alert('Favorito salvo!');
+  } catch(e) { alert('Erro: ' + e.message); }
+}
+
+// ============================================================
+// Consulta
+// ============================================================
+async function consultar() {
+  const o = document.getElementById('origem').value.trim();
+  const d = document.getElementById('destino').value.trim();
+  if (!o || !d) { mostrarErro('Preencha os campos de origem e destino.'); return; }
+  if (o === d)   { mostrarErro('Origem e destino não podem ser iguais.'); return; }
+
+  esconderErro();
+  mostrarSpinner(true);
+  ocultarResultado();
+
+  // Limpar explosão se ativa
+  if (_mExplosao) {
+    map.removeLayer(_mExplosao);
+    _mExplosao = null;
+    const _btnExp = document.getElementById('btn-explosao');
+    if (_btnExp) _btnExp.textContent = '🌍 Explodir Rotas';
+  }
+
+  try {
+    let url = '/consultar?origem=' + encodeURIComponent(o) + '&destino=' + encodeURIComponent(d);
+    if (_viaAtual && _viaAtual.length) {
+      _viaAtual.forEach(function(v) { url += '&via=' + encodeURIComponent(v); });
+    }
+    const r    = await fetch(url);
+    const data = await r.json();
+    if (!r.ok) { mostrarErro(data.detail || 'Erro ao consultar.'); return; }
+    renderResultado(data);
+    renderMapa(data);
+  } catch(e) {
+    mostrarErro('Erro de conexão: ' + e.message);
+  } finally {
+    _viaAtual = [];
+    mostrarSpinner(false);
+  }
+}
+
+['origem', 'destino'].forEach(id =>
+  document.getElementById(id).addEventListener('keydown', e => { if (e.key === 'Enter') consultar(); })
+);
+
+// ============================================================
+// Renderização do painel de resultado
+// ============================================================
+function renderResultado(d) {
+  document.getElementById('result-card').style.display = 'flex';
+
+  const rotaTexto = (d.origem_label || d.origem) + ' → ' + (d.destino_label || d.destino);
+  const resRota = document.getElementById('res-rota');
+  resRota.textContent = rotaTexto;
+  resRota.title = rotaTexto;
+  document.getElementById('res-meta').textContent =
+    fmtConsultadoEm(d.consultado_em) + (d.distancia_km ? '  |  ' + d.distancia_km + ' km' : '');
+
+  document.getElementById('res-cache').innerHTML = d.cache_hit
+    ? '<span class="cache-badge">&#9889; Cache</span>' : '';
+
+  const badge = document.getElementById('res-badge');
+  badge.textContent = d.status || 'Sem dados';
+  badge.className = 'badge badge-' + sClass(d.status);
+
+  // Status Google vs HERE side-by-side
+  const gBadge = d.status_google ? '<span class="badge badge-' + sClass(d.status_google) + '" style="font-size:.7rem;padding:1px 8px;">' + esc(d.status_google) + '</span>' : '—';
+  const hBadge = d.status_here   ? '<span class="badge badge-' + sClass(d.status_here)   + '" style="font-size:.7rem;padding:1px 8px;">' + esc(d.status_here)   + '</span>' : '—';
+  document.getElementById('res-fontes-status').innerHTML =
+    '<div class="fonte-status"><span class="nome">&#127758; Google</span>' + gBadge + '</div>' +
+    '<div class="fonte-status"><span class="nome">&#128249; HERE</span>' + hBadge + '</div>';
+
+  // Métricas
+  const metrics = [
+    { val: fmtMin(d.atraso_min),           lbl: 'Atraso',            icon: '\u23F1' },
+    { val: fmtMin(d.duracao_transito_min),  lbl: 'Com tr\u00e2nsito', icon: '\uD83D\uDE97' },
+    { val: fmtMin(d.duracao_normal_min),    lbl: 'Sem tr\u00e2nsito', icon: '\uD83D\uDEE3' },
+    { val: d.velocidade_atual_kmh ? d.velocidade_atual_kmh + ' km/h' : '\u2014', lbl: 'Velocidade', icon: '\u26A1' },
+    { val: d.jam_factor_max       ? d.jam_factor_max.toFixed(1)       : '\u2014', lbl: 'Congestionamento', icon: '\uD83D\uDEA6' },
+    { val: d.pct_congestionado    ? d.pct_congestionado + '%'         : '\u2014', lbl: '% Congestionado', icon: '\uD83D\uDCCA' },
+  ];
+  document.getElementById('res-metrics').innerHTML =
+    '<div class="metrics-section-label">Tempos</div>' +
+    '<div class="metrics-grid">' + metrics.slice(0, 3).map(m => buildMetricCard(m, d)).join('') + '</div>' +
+    '<div class="metrics-section-label" style="margin-top:6px;">Tr\u00e2nsito em tempo real</div>' +
+    '<div class="metrics-grid">' + metrics.slice(3, 6).map(m => buildMetricCard(m, d)).join('') + '</div>';
+
+  // Confiança
+  const pct   = d.confianca_pct || 0;
+  const label = d.confianca || 'Baixa';
+  const cor   = { 'Alta': '#27ae60', 'Média': '#f39c12', 'Baixa': '#e74c3c' }[label] || '#7f8c8d';
+  document.getElementById('res-conf').innerHTML =
+    '<div class="conf-section">' +
+      '<div class="conf-header">' +
+        '<span class="conf-label">Confiabilidade da an\u00e1lise</span>' +
+        '<span class="info-icon" data-tooltip="' + esc(CONF_TOOLTIP) + '" style="position:relative;display:inline-block;vertical-align:middle;margin-left:4px;">i</span>' +
+        '<span class="conf-value" style="color:' + cor + ';">' + esc(label) + ' (' + pct + '%)</span>' +
+      '</div>' +
+      '<div class="conf-bar"><div class="conf-bar-fill" style="width:' + pct + '%;background:' + cor + ';"></div></div>' +
+      '<div class="conf-scale"><span>0%</span><span>50%</span><span>100%</span></div>' +
+    '</div>';
+
+  // Botões de ação
+  document.getElementById('res-actions').innerHTML =
+    '<a href="' + esc(d.link_waze)  + '" target="_blank" class="btn btn-secondary btn-sm">&#128662; Waze</a>' +
+    '<a href="' + esc(d.link_gmaps) + '" target="_blank" class="btn btn-secondary btn-sm">&#128506; Maps</a>' +
+    '<button class="btn btn-secondary btn-sm" onclick="baixarExcel()">&#128196; Excel</button>' +
+    '<button class="btn btn-secondary btn-sm" onclick="baixarCSV()">&#128202; CSV</button>';
+
+  // Lista de incidentes no painel
+  const incs = d.incidentes || [];
+  const wrap = document.getElementById('res-incs');
+  if (incs.length) {
+    const items = incs.map(inc => {
+      const sc = (inc.severidade || 'media').toLowerCase().replace(/[éê]/g, 'e');
+      const cl = inc.road_closed
+        ? ' <span style="color:#922b21;font-weight:700;font-size:.68rem;">&#9940;FECHADA</span>' : '';
+      return '<div class="inc-item ' + sc + '">' +
+        '<div class="inc-cat">' +
+          (INC_ICONS[inc.categoria] || '&#9888;&#65039;') + ' ' +
+          esc(inc.categoria || '') + ' [' + esc(inc.severidade || '') + ']' + cl +
+        '</div>' +
+        (inc.rodovia_afetada ? '<div class="inc-road">&#128739; ' + esc(inc.rodovia_afetada) + '</div>' : '') +
+        '<div class="inc-desc">' + esc(inc.descricao || '') + '</div>' +
+        '</div>';
+    }).join('');
+    wrap.innerHTML =
+      '<div class="incidents-header">&#9888;&#65039; Incidentes na rota <span class="incidents-count">' + incs.length + '</span></div>' + items;
+  } else {
+    wrap.innerHTML = '<div style="font-size:.76rem;color:#718096;">Nenhum incidente relevante na rota.</div>';
+  }
+
+  // Avisos de erro
+  const erros = Object.entries(d.erros || {}).filter(([, v]) => v)
+    .map(([k, v]) => '<b>' + k + ':</b> ' + esc(v)).join('<br>');
+  if (erros) {
+    wrap.innerHTML +=
+      '<div style="margin-top:8px;padding:6px 12px;background:#fff5f5;border:1px solid #feb2b2;' +
+      'border-radius:6px;font-size:.72rem;color:#c53030;"><b>Avisos:</b><br>' + erros + '</div>';
+  }
+}
+
+// ============================================================
+// Export
+// ============================================================
+function _xurl(t) {
+  return '/exportar/' + t +
+    '?origem='  + encodeURIComponent(document.getElementById('origem').value.trim()) +
+    '&destino=' + encodeURIComponent(document.getElementById('destino').value.trim());
+}
+function baixarExcel() { window.location.href = _xurl('excel'); }
+function baixarCSV()   { window.location.href = _xurl('csv'); }
+
+// ============================================================
+// UI helpers
+// ============================================================
+function mostrarSpinner(s) {
+  document.getElementById('spinner').style.display = s ? 'block' : 'none';
+  document.getElementById('btn-consultar').disabled = s;
+}
+function ocultarResultado() { document.getElementById('result-card').style.display = 'none'; }
+function mostrarErro(m) {
+  const el = document.getElementById('error-box');
+  el.textContent = '⚠ ' + m; el.style.display = 'block';
+}
+function esconderErro() { document.getElementById('error-box').style.display = 'none'; }
+
+// ============================================================
+// Visão Geral
+// ============================================================
+let _vgResultados = [];
+let _vgMinimizado = false;
+let _viaAtual = [];
+
+async function abrirVisaoGeral() {
+  if (_vgMinimizado && _vgResultados.length > 0) {
+    restaurarVisaoGeral();
+    return;
+  }
+  document.getElementById('vg-overlay').style.display = 'flex';
+  document.getElementById('vg-spinner').style.display = 'block';
+  document.getElementById('vg-grid').style.display    = 'none';
+  document.getElementById('vg-resumo').style.display  = 'none';
+  document.getElementById('vg-btn-excel').style.display = 'none';
+  document.getElementById('vg-btn-csv').style.display  = 'none';
+  document.getElementById('vg-sub').textContent = 'Consultando as rotas em tempo real…';
+  try {
+    const r = await fetch('/visao-geral');
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const data = await r.json();
+    renderVisaoGeral(data.resultados || []);
+  } catch(e) {
+    document.getElementById('vg-sub').textContent = '⚠ Erro: ' + e.message;
+    document.getElementById('vg-spinner').style.display = 'none';
+  }
+}
+
+function fecharVisaoGeral() {
+  document.getElementById('vg-overlay').style.display = 'none';
+  document.getElementById('vg-restore-btn').style.display = 'none';
+  _vgMinimizado = false;
+}
+
+function minimizarVisaoGeral() {
+  document.getElementById('vg-overlay').style.display = 'none';
+  _vgMinimizado = true;
+  document.getElementById('vg-restore-btn').style.display = 'block';
+}
+
+function restaurarVisaoGeral() {
+  document.getElementById('vg-restore-btn').style.display = 'none';
+  _vgMinimizado = false;
+  document.getElementById('vg-overlay').style.display = 'flex';
+  renderVisaoGeral(_vgResultados);
+}
+
+function renderVisaoGeral(resultados) {
+  _vgResultados = resultados;
+  document.getElementById('vg-spinner').style.display = 'none';
+
+  const cnt = {};
+  resultados.forEach(r => { const k = r.status || 'Erro'; cnt[k] = (cnt[k] || 0) + 1; });
+
+  const resumoEl = document.getElementById('vg-resumo');
+  resumoEl.style.display = 'flex';
+  resumoEl.innerHTML =
+    (cnt['Normal']   ? `<span class="badge badge-normal">\u25cf Normal: ${cnt['Normal']}</span>`      : '') +
+    (cnt['Moderado'] ? `<span class="badge badge-moderado">\u25cf Moderado: ${cnt['Moderado']}</span>` : '') +
+    (cnt['Intenso']  ? `<span class="badge badge-intenso">\u25cf Intenso: ${cnt['Intenso']}</span>`    : '') +
+    (cnt['Parado']   ? `<span class="badge badge-parado">\u25cf Parado: ${cnt['Parado']}</span>`       : '') +
+    (cnt['Erro']     ? `<span class="badge badge-semdados">\u25cf Erro: ${cnt['Erro']}</span>`         : '');
+
+  document.getElementById('vg-sub').textContent =
+    `${resultados.length} rotas consultadas — clique num card para ver no mapa`;
+
+  // Mostrar botões de export quando há resultados
+  if (resultados.length > 0) {
+    document.getElementById('vg-btn-excel').style.display = 'inline-flex';
+    document.getElementById('vg-btn-csv').style.display = 'inline-flex';
+  } else {
+    document.getElementById('vg-btn-excel').style.display = 'none';
+    document.getElementById('vg-btn-csv').style.display = 'none';
+  }
+
+  const BORDER = { Normal: '#27ae60', Moderado: '#f39c12', Intenso: '#e67e22', Parado: '#c0392b' };
+
+  const grid = document.getElementById('vg-grid');
+  grid.style.display = 'grid';
+  grid.innerHTML = resultados.map((r, idx) => {
+    const sc          = sClass(r.status);
+    const bcolor      = BORDER[r.status] || '#cbd5e0';
+    const dist        = r.distancia_km || r.distancia_predefinida_km;
+    const atrasoMin   = r.atraso_min;
+    const atrasoStr   = atrasoMin != null
+      ? (atrasoMin > 0 ? `\u23f1 +${fmtMin(atrasoMin)}` : '\u23f1 Sem atraso')
+      : '';
+    const velStr      = r.velocidade_atual_kmh ? `\u26a1 ${r.velocidade_atual_kmh} km/h` : '';
+    const erroMsg     = (r.erros && r.erros.geral) ? r.erros.geral : '';
+
+    return `<div class="vg-card" style="border-left-color:${bcolor};" onclick="selecionarRotaVG(${idx})">
+      <div class="vg-card-id">${esc(r.rota_id || '')} &nbsp;<span class="badge badge-${sc}" style="font-size:.6rem;padding:1px 7px;">${esc(r.status || 'Sem dados')}</span></div>
+      <div class="vg-card-rota">${esc(r.hub_origem || r.origem || '')} <span style="color:#a0aec0;">\u2192</span> ${esc(r.hub_destino || r.destino || '')}</div>
+      <div class="vg-card-metrics">
+        ${atrasoStr ? `<span class="vg-card-metric">${atrasoStr}</span>` : ''}
+        ${dist      ? `<span class="vg-card-metric">\uD83D\uDCCD ${dist} km</span>` : ''}
+        ${velStr    ? `<span class="vg-card-metric">${velStr}</span>` : ''}
+      </div>
+      ${erroMsg ? `<div class="vg-card-erro">\u26a0 ${esc(erroMsg.slice(0, 70))}</div>` : ''}
+    </div>`;
+  }).join('');
+}
+
+function selecionarRotaVG(idx) {
+  const r = _vgResultados[idx];
+  if (!r) return;
+  fecharVisaoGeral();
+  document.getElementById('origem').value  = r.origem  || '';
+  document.getElementById('destino').value = r.destino || '';
+  _viaAtual = r.via || [];
+  consultar();
+}
+
+// ============================================================
+// Explosão de Rotas
+// ============================================================
+function renderExplosaoRotas(resultados) {
+  if (_mExplosao) { map.removeLayer(_mExplosao); _mExplosao = null; }
+
+  const allLayers = [];
+  const origensMap = {};  // "lat,lng" → { lat, lng, rotas[] }
+  const destsMap   = {};  // "lat,lng" → { lat, lng, nome }
+  let omitidas = 0;
+
+  resultados.forEach(r => {
+    const geojson = r.route_geojson;
+    if (!geojson || !geojson.geometry) {
+      const nome = `${r.hub_origem || r.origem} → ${r.hub_destino || r.destino}`;
+      const pontos = r.via_coords?.length
+        ? r.via_coords.map(p => [p.lat, p.lng])
+        : [];
+      if (pontos.length >= 2) {
+        allLayers.push(L.polyline(pontos, {
+          renderer: _cvs, color: '#95a5a6', weight: 3,
+          opacity: 0.5, dashArray: '6,8'
+        }).bindTooltip(`<b>${esc(nome)}</b><br>⚠ Sem dados de tráfego`, { sticky: true }));
+      } else {
+        omitidas++;
+      }
+      return;
+    }
+
+    const coords  = geojson.geometry.coordinates;  // [[lng, lat], ...]
+    const latlngs = coords.map(c => [c[1], c[0]]);
+    if (latlngs.length < 2) return;
+
+    const color = STATUS_COLORS[r.status] || '#95a5a6';
+    const nome  = `${r.hub_origem || r.origem} → ${r.hub_destino || r.destino}`;
+
+    const line = L.polyline(latlngs, {
+      renderer: _cvs,
+      color:    color,
+      weight:   4,
+      opacity:  0.65,
+    });
+
+    line.bindTooltip(
+      `<b>${esc(nome)}</b><br>` +
+      `Status: <b style="color:${color}">${esc(r.status || 'Sem dados')}</b><br>` +
+      `Atraso: ${fmtMin(r.atraso_min || 0)}<br>` +
+      `Vel.: ${r.velocidade_atual_kmh ? r.velocidade_atual_kmh.toFixed(0) + ' km/h' : '—'}`,
+      { sticky: true, direction: 'top' }
+    );
+
+    line.on('mouseover', function() { this.setStyle({ opacity: 1, weight: 5.5 }); });
+    line.on('mouseout',  function() { this.setStyle({ opacity: 0.65, weight: 4 }); });
+
+    allLayers.push(line);
+
+    const oLat = latlngs[0][0], oLng = latlngs[0][1];
+    const oKey = `${oLat.toFixed(3)},${oLng.toFixed(3)}`;
+    if (!origensMap[oKey]) origensMap[oKey] = { lat: oLat, lng: oLng, rotas: [] };
+    origensMap[oKey].rotas.push({ nome, status: r.status, atraso: r.atraso_min });
+
+    const last = latlngs[latlngs.length - 1];
+    const dKey = `${last[0].toFixed(3)},${last[1].toFixed(3)}`;
+    destsMap[dKey] = { lat: last[0], lng: last[1], nome: r.hub_destino || r.destino };
+  });
+
+  // Marcadores de Destino (círculo vermelho pequeno)
+  Object.values(destsMap).forEach(d => {
+    allLayers.push(
+      L.circleMarker([d.lat, d.lng], {
+        radius: 7, color: '#922b21', fillColor: '#e74c3c',
+        fillOpacity: 0.9, weight: 2,
+      }).bindPopup(`<b>&#128308; Destino</b><br>${esc(d.nome)}`)
+    );
+  });
+
+  // Marcadores de Origem (círculo verde, um por origem única)
+  Object.values(origensMap).forEach(o => {
+    const lista = o.rotas
+      .map(r => `<li style="color:${STATUS_COLORS[r.status] || '#95a5a6'}">${esc(r.nome)} — ${fmtMin(r.atraso || 0)}</li>`)
+      .join('');
+    allLayers.push(
+      L.circleMarker([o.lat, o.lng], {
+        radius: 13, color: '#1e8449', fillColor: '#27ae60',
+        fillOpacity: 1, weight: 3,
+      }).bindPopup(
+        `<b>&#128994; Origem</b><br><ul style="margin:4px 0;padding-left:16px">${lista}</ul>`,
+        { maxWidth: 280 }
+      )
+    );
+  });
+
+  _mExplosao = L.featureGroup(allLayers).addTo(map);
+  try { map.fitBounds(_mExplosao.getBounds().pad(0.06)); } catch(_) {}
+  return omitidas;
+}
+
+async function abrirExplosaoRotas() {
+  if (_mExplosao) {
+    map.removeLayer(_mExplosao);
+    _mExplosao = null;
+    document.getElementById('btn-explosao').textContent = '🌍 Explodir Rotas';
+    return;
+  }
+
+  mostrarSpinner(true);
+  esconderErro();
+  try {
+    const resp = await fetch('/visao-geral');
+    if (!resp.ok) throw new Error('Falha na requisição: ' + resp.status);
+    const data = await resp.json();
+    const resultados = data.resultados || [];
+    if (!resultados.length) throw new Error('Nenhuma rota disponível.');
+    const omitidas = renderExplosaoRotas(resultados);
+    document.getElementById('btn-explosao').textContent =
+      omitidas > 0 ? `✖ Fechar Explosão (${omitidas} sem dados)` : '✖ Fechar Explosão';
+  } catch(e) {
+    mostrarErro('Erro na Explosão de Rotas: ' + esc(e.message));
+  } finally {
+    mostrarSpinner(false);
+  }
+}
+
+// Fechar overlay ao clicar fora ou pressionar ESC
+document.addEventListener('DOMContentLoaded', function() {
+  document.getElementById('vg-overlay').addEventListener('click', function(e) {
+    if (e.target === this) fecharVisaoGeral();
+  });
+});
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') fecharVisaoGeral();
+});
+
+// Init
+carregarFavs();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,31 @@
+frontend/node_modules/
+frontend/dist/
+frontend/public/version.json
+.vscode/
+.claude/
+**/.claude/
+.pytest_cache/
+*.pyc
+*.pyo
+*.pyd
+backend/__pycache__/
+backend/**/__pycache__/
+.venv/
+venv/
+.env
+.env.*
+*.env
+!.env.example
+!.env.sample
+!.env.template
+# Logs
+*.log
+backend/logs/*.log
+
+# Project specific
+temp_*.json
+backend/data/temp_*.json
+backend/scripts/tmp_*.py
+backend/config.local.yaml
+backend/config.*.local.yaml
+backend/config.override.yaml

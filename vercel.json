@@ -1,0 +1,28 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "installCommand": "cd frontend && npm ci",
+  "buildCommand": "cd frontend && npm run build",
+  "outputDirectory": "frontend/dist",
+  "rewrites": [
+    {
+      "source": "/auth/:path*",
+      "destination": "https://monitoramento-dinamico-api.onrender.com/auth/:path*"
+    },
+    {
+      "source": "/painel",
+      "destination": "https://monitoramento-dinamico-api.onrender.com/painel"
+    },
+    {
+      "source": "/painel/:path*",
+      "destination": "https://monitoramento-dinamico-api.onrender.com/painel/:path*"
+    },
+    {
+      "source": "/rotas/:path*",
+      "destination": "https://monitoramento-dinamico-api.onrender.com/rotas/:path*"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
+}

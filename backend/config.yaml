@@ -1,0 +1,28 @@
+# Public-safe defaults only. Keep real secrets in environment variables.
+
+google:
+  api_key: ""  # set GOOGLE_MAPS_API_KEY in your shell or CI
+
+here:
+  api_key: ""  # set HERE_API_KEY in your shell or CI
+
+cache:
+  ttl_segundos: 300
+
+web:
+  host: "0.0.0.0"
+  port: 8000
+
+corporativo:
+  rotas_corporativas: "data/rotas.json"
+
+auth_local:
+  enabled: false  # set via AUTH_LOCAL_ENABLED=true + real secrets in env
+  username: "operacao"
+  password: "definir_localmente"
+  session_secret: "trocar-em-producao"
+  cookie_secure: false
+
+supabase:
+  url: ""  # set SUPABASE_URL in your shell or CI
+  key: ""  # set SUPABASE_SERVICE_ROLE_KEY (or SUPABASE_KEY) in env
