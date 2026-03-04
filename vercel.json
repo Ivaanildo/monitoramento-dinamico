@@ -1,24 +1,26 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "installCommand": "cd frontend && npm ci",
-  "buildCommand": "cd frontend && npm run build",
-  "outputDirectory": "frontend/dist",
+  "framework": null,
+  "rootDirectory": "frontend",
+  "installCommand": "npm ci",
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
   "rewrites": [
     {
       "source": "/auth/:path*",
-      "destination": "https://monitoramento-dinamico-api.onrender.com/auth/:path*"
+      "destination": "https://monitoramento-dinamico-production.up.railway.app/auth/:path*"
     },
     {
       "source": "/painel",
-      "destination": "https://monitoramento-dinamico-api.onrender.com/painel"
+      "destination": "https://monitoramento-dinamico-production.up.railway.app/painel"
     },
     {
       "source": "/painel/:path*",
-      "destination": "https://monitoramento-dinamico-api.onrender.com/painel/:path*"
+      "destination": "https://monitoramento-dinamico-production.up.railway.app/painel/:path*"
     },
     {
       "source": "/rotas/:path*",
-      "destination": "https://monitoramento-dinamico-api.onrender.com/rotas/:path*"
+      "destination": "https://monitoramento-dinamico-production.up.railway.app/rotas/:path*"
     },
     {
       "source": "/(.*)",
