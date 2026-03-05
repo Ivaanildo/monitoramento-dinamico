@@ -10,6 +10,7 @@ from datetime import datetime, timezone
 
 from core import consultor, rotas_corporativas
 from core.cache import get_cache
+from core.status import inferir_ocorrencia, aplicar_override_ocorrencia
 from storage.repository import salvar_snapshot_agregado
 
 logger = logging.getLogger(__name__)
@@ -31,22 +32,29 @@ def converter_para_resumo_painel(rota_corp: dict, resultado_detalhado: dict) -> 
     nome = f"{hub_o} -> {hub_d}"
     trecho = f"{hub_o} / {hub_d}"
     
-    status = resultado_detalhado.get("status", "Erro")
-    
+    status_base = resultado_detalhado.get("status", "Erro")
+
     incidente_dict = resultado_detalhado.get("incidente_principal") or {}
-    ocorrencia = incidente_dict.get("categoria", "") if incidente_dict else ""
+    jam_max = resultado_detalhado.get("jam_factor_max", 0) or 0
+    atraso_min = resultado_detalhado.get("atraso_min", 0)
+
+    ocorrencia = inferir_ocorrencia(
+        incidente_dict if incidente_dict else None,
+        float(jam_max),
+        int(atraso_min),
+    )
+    status = aplicar_override_ocorrencia(status_base, ocorrencia, float(jam_max), int(atraso_min))
+
     relato = resultado_detalhado.get("relato") or (incidente_dict.get("descricao", "") if incidente_dict else "")
-    
+
     hora_atualizacao = resultado_detalhado.get("consultado_em", datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S"))
-    
+
     # Tratar confianca se for string (e.g., "?")
     confianca_pct_raw = resultado_detalhado.get("confianca_pct", 0)
     try:
         confianca_pct = int(confianca_pct_raw)
     except (ValueError, TypeError):
         confianca_pct = 0
-        
-    atraso_min = resultado_detalhado.get("atraso_min", 0)
 
     return {
         "rota_id": rota_id,
@@ -55,7 +63,9 @@ def converter_para_resumo_painel(rota_corp: dict, resultado_detalhado: dict) -> 
         "trecho": trecho,
         "status": status,
         "ocorrencia": ocorrencia,
+        "ocorrencia_principal": ocorrencia,
         "relato": relato,
+        "observacao_resumo": relato,
         "hora_atualizacao": hora_atualizacao,
         "confianca_pct": confianca_pct,
         "atraso_min": atraso_min,
@@ -127,8 +137,8 @@ async def obter_painel_agregado(config: dict) -> dict:
             
             if snap:
                 status = snap.get("status", "N/A")
-                ocorrencia = snap.get("ocorrencia", "")
-                relato = snap.get("descricao", "")
+                ocorrencia = snap.get("ocorrencia_principal") or snap.get("ocorrencia", "")
+                relato = snap.get("observacao_resumo") or snap.get("descricao", "")
                 hora_atualizacao = snap.get("ts_iso", "")
                 confianca_pct = snap.get("confianca_pct", 0)
                 atraso_min = snap.get("atraso_min", 0)
@@ -147,18 +157,23 @@ async def obter_painel_agregado(config: dict) -> dict:
                 "trecho": trecho,
                 "status": status,
                 "ocorrencia": ocorrencia,
+                "ocorrencia_principal": ocorrencia,
                 "relato": relato,
+                "observacao_resumo": relato,
                 "hora_atualizacao": hora_atualizacao,
                 "confianca_pct": confianca_pct,
                 "atraso_min": atraso_min,
-                "distancia_km": r.get("distance_km", 0)
+                "distancia_km": r.get("distance_km", 0),
+                "dados_origem": "snapshot",
             })
 
         return {
             "consultado_em": ultimo_ciclo.get("ts_iso", ""),
             "fonte": "supabase",
+            "dados_origem": "snapshot",
+            "ciclo_id": ciclo_id,
             "total_rotas": len(linhas_painel),
-            "resultados": linhas_painel
+            "resultados": linhas_painel,
         }
 
     except Exception as e:
