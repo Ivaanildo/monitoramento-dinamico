@@ -178,9 +178,9 @@ async def obter_painel_agregado(config: dict) -> dict:
                 "hora_atualizacao": hora_atualizacao,
                 "confianca_pct": confianca_pct,
                 "atraso_min": atraso_min,
-                "duracao_normal_min": snap.get("duracao_normal_min", 0) if snap else 0,
-                "duracao_transito_min": snap.get("duracao_transito_min", 0) if snap else 0,
-                "jam_factor_max": snap.get("jam_factor_max", 0) if snap else 0,
+                "duracao_normal_min": (snap.get("duracao_normal_min") or 0) if snap else 0,
+                "duracao_transito_min": (snap.get("duracao_transito_min") or 0) if snap else 0,
+                "jam_factor_max": (snap.get("jam_factor_max") or 0) if snap else 0,
                 "distancia_km": r.get("distance_km", 0),
                 "dados_origem": "snapshot",
             })
