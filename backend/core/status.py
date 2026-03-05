@@ -3,44 +3,24 @@
 Portado de monitor-rodovias/sources/google_maps.py + correlator.py.
 """
 
-# ===== Thresholds (portados de google_maps.py) =====
-
-# Razão duração_tráfego / duração_normal
-THRESHOLDS_RAZAO = {
-    "Normal": 1.15,
-    "Moderado": 1.40,
-}
-
-# Atraso absoluto (minutos) — complementa a razão para rotas longas
-THRESHOLDS_ATRASO_ABS = {
-    "Moderado": {"min_atraso_min": 20, "min_razao": 1.03},
-    "Intenso":  {"min_atraso_min": 30, "min_razao": 1.05},
-}
-
 # Ordem de severidade
 _NIVEL = {"Sem dados": -1, "Erro": -1, "Normal": 0, "Moderado": 1, "Intenso": 2, "Parado": 3}
 
 
 def classificar_transito(duracao_normal_s: float, duracao_transito_s: float) -> str:
-    """Classifica trânsito combinando razão + atraso absoluto (portado de google_maps.py)."""
+    """Classifica trânsito baseado no atraso absoluto em minutos.
+
+    Faixas: 0-20 min → Normal | >20-30 min → Moderado | >=30 min → Intenso
+    """
     if duracao_normal_s <= 0:
         return "Sem dados"
 
-    razao = duracao_transito_s / duracao_normal_s
     atraso_min = max(0, (duracao_transito_s - duracao_normal_s)) / 60
 
-    th_intenso = THRESHOLDS_ATRASO_ABS["Intenso"]
-    if (razao > THRESHOLDS_RAZAO["Moderado"]
-            or (atraso_min >= th_intenso["min_atraso_min"] and razao > th_intenso["min_razao"])
-            or atraso_min > 30):          # rota longa: atraso alto força Intenso
+    if atraso_min >= 30:
         return "Intenso"
-
-    th_moderado = THRESHOLDS_ATRASO_ABS["Moderado"]
-    if razao > THRESHOLDS_RAZAO["Normal"] or (
-        atraso_min >= th_moderado["min_atraso_min"] and razao > th_moderado["min_razao"]
-    ):
+    if atraso_min > 20:
         return "Moderado"
-
     return "Normal"
 
 
@@ -50,8 +30,8 @@ def status_de_jam(jam_factor_max: float, jam_factor_avg: float,
 
     Usa jam_factor_max para capturar congestionamentos localizados
     que a média dilui (ex: BR-381 com 50km parados + 380km livres).
-    Requer pct_cong >= 15 para promover a Intenso (evita falsos positivos
-    por um único segmento ruim em rodovias longas).
+    Requer pct_cong >= 15 para promover a Intenso e pct_cong >= 10 para
+    promover a Moderado (evita falsos positivos por segmentos isolados).
     """
     if road_closed:
         return "Parado"
@@ -59,7 +39,7 @@ def status_de_jam(jam_factor_max: float, jam_factor_avg: float,
         return "Parado"
     if jam_factor_max >= 8 and pct_cong >= 15:
         return "Intenso"
-    if jam_factor_max >= 5 or jam_factor_avg >= 5:
+    if (jam_factor_max >= 5 or jam_factor_avg >= 5) and pct_cong >= 10:
         return "Moderado"
     return "Normal"
 
@@ -115,29 +95,42 @@ def gerar_observacao(
     jam_avg: float,
     vel_atual: float,
     vel_livre: float,
+    sigla: str = "",
+    hub_origem: str = "",
+    hub_destino: str = "",
 ) -> str:
-    """Sintetiza texto rico de observação para exibição no painel."""
-    partes: list[str] = []
+    """Sintetiza texto operacional de observação para exibição no painel e Excel."""
+    via = sigla or "trecho monitorado"
 
+    if atraso_min > 0:
+        categoria = ""
+        if inc:
+            categoria = inc.get("categoria", "")
+        if not categoria:
+            categoria = "Engarrafamento"
+        return (
+            f"{categoria} (Google Maps) em {via}: "
+            f"Atraso {atraso_min} min | "
+            f"Atraso estimado: {atraso_min} min | "
+            f"Google: lentidao no trecho inicial"
+        )
+
+    # Sem atraso mas com incidente HERE (ex: obras noturnas sem impacto ainda)
     if inc:
-        categoria = inc.get("categoria", "")
+        categoria = inc.get("categoria", "Ocorrência")
         descricao = inc.get("descricao", "")
         rodovia = inc.get("rodovia_afetada", "")
-        trecho_inc = f"{categoria}: {descricao}" if descricao else categoria
+        partes = [f"{categoria} em {via}"]
+        if descricao:
+            partes.append(descricao)
         if rodovia:
-            trecho_inc += f" | Rodovia: {rodovia}"
-        if trecho_inc:
-            partes.append(trecho_inc)
+            partes.append(f"Rodovia: {rodovia}")
+        return " | ".join(partes) + " | Sem impacto no tempo de viagem no momento"
 
-    if atraso_min > 0 and dur_normal > 0:
-        partes.append(f"+ Atraso de ~{atraso_min}min (normal:{dur_normal}min, atual:{dur_transito}min)")
-    elif atraso_min > 0:
-        partes.append(f"+ Atraso de ~{atraso_min}min")
+    if hub_origem and hub_destino:
+        return f"Via {via}, sentido {hub_origem} -> {hub_destino} sem anormalidades, fluxo livre."
 
-    if vel_atual > 0 and vel_livre > 0 and not partes:
-        partes.append(f"Vel. atual: {vel_atual:.0f}km/h (livre: {vel_livre:.0f}km/h)")
-
-    return " | ".join(partes) if partes else "Sem anormalidades no trecho monitorado"
+    return f"Via {via} sem anormalidades, fluxo livre."
 
 
 def inferir_ocorrencia(incidente_principal: dict | None, jam_max: float, atraso_min: int) -> str:

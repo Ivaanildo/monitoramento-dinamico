@@ -53,6 +53,9 @@ def salvar_snapshot_agregado(resultados: list, font_list: str = "google,here"):
                 "observacao_resumo": observacao,
                 "atraso_min": r.get("atraso_min", 0),
                 "confianca_pct": r.get("confianca_pct", 0),
+                "duracao_normal_min": r.get("duracao_normal_min", 0),
+                "duracao_transito_min": r.get("duracao_transito_min", 0),
+                "jam_factor_max": r.get("jam_factor_max", 0),
                 "conflito_fontes": 0,
                 "ts_iso": agora_iso,
             })

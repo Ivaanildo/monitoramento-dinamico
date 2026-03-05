@@ -284,19 +284,21 @@ def _gerar_aba_incidentes_simples(wb: Workbook, incidentes: list) -> None:
 # ===== Excel — Visão Geral (múltiplas rotas) =====
 
 _HEADERS_VISAO_GERAL = [
-    ("#",               5),
-    ("Sigla",          20),
-    ("Nome",           36),
-    ("Trecho",         30),
-    ("Status",         12),
-    ("Ocorrência",     20),
-    ("Relato",         50),
-    ("Waze",           10),
-    ("Google Maps",    14),
-    ("Confiança (%)",  14),
-    ("Atraso (min)",   13),
-    ("Distância (km)", 14),
-    ("Atualizado em",  20),
+    ("#",                       5),
+    ("Sigla (Rodovia)",        20),
+    ("Nome",                   36),
+    ("Trecho",                 30),
+    ("Status",                 12),
+    ("Ocorrência",             20),
+    ("Descrição / Observações",50),
+    ("Duração normal",         16),
+    ("Duração atual",          16),
+    ("Atraso (min)",           13),
+    ("Jam Factor",             12),
+    ("Confiança (%)",          14),
+    ("Waze",                   10),
+    ("Google Maps",            14),
+    ("Atualizado em",          20),
 ]
 TOTAL_COLS_VISAO_GERAL = len(_HEADERS_VISAO_GERAL)
 
@@ -344,15 +346,17 @@ def gerar_excel_visao_geral(resultados: list) -> bytes:
         row = idx + header_row
         _aplicar_linha_base(ws, row, TOTAL_COLS_VISAO_GERAL, zebra=(idx % 2 == 0))
 
-        status_val   = r.get("status", "Sem dados")
-        ocorrencia   = r.get("ocorrencia", "")
-        relato       = r.get("relato", "")
-        confianca_pct= r.get("confianca_pct", 0)
-        atraso       = r.get("atraso_min", 0)
-        distancia    = r.get("distancia_km", 0.0)
-        link_waze    = r.get("link_waze", "")
-        link_gmaps   = r.get("link_gmaps", "")
-        atualizado   = r.get("hora_atualizacao", "")
+        status_val    = r.get("status", "Sem dados")
+        ocorrencia    = r.get("ocorrencia", "")
+        relato        = r.get("relato", "")
+        dur_normal    = r.get("duracao_normal_min", 0)
+        dur_transito  = r.get("duracao_transito_min", 0)
+        atraso        = r.get("atraso_min", 0)
+        jam_factor    = r.get("jam_factor_max", 0)
+        confianca_pct = r.get("confianca_pct", 0)
+        link_waze     = r.get("link_waze", "")
+        link_gmaps    = r.get("link_gmaps", "")
+        atualizado    = r.get("hora_atualizacao", "")
 
         valores = [
             idx,
@@ -362,11 +366,13 @@ def gerar_excel_visao_geral(resultados: list) -> bytes:
             status_val,
             ocorrencia,
             _texto_curto(relato),
+            dur_normal,
+            dur_transito,
+            atraso,
+            jam_factor,
+            confianca_pct,
             link_waze,
             link_gmaps,
-            confianca_pct,
-            atraso,
-            distancia,
             atualizado,
         ]
 
@@ -374,11 +380,11 @@ def gerar_excel_visao_geral(resultados: list) -> bytes:
             c = ws.cell(row=row, column=col, value=val)
             if col in (3, 4, 7):
                 c.alignment = LEFT
-            if col == 8 and link_waze:
+            if col == 13 and link_waze:
                 c.value = "Abrir Waze"
                 c.hyperlink = link_waze
                 c.font = LINK_FONT
-            if col == 9 and link_gmaps:
+            if col == 14 and link_gmaps:
                 c.value = "Abrir Maps"
                 c.hyperlink = link_gmaps
                 c.font = LINK_FONT
@@ -401,8 +407,8 @@ def gerar_excel_visao_geral(resultados: list) -> bytes:
             str_conf = "baixa"
         cf, cft = _get_style("confianca", str_conf)
         if cf:
-            ws.cell(row=row, column=10).fill = cf
-            ws.cell(row=row, column=10).font = cft
+            ws.cell(row=row, column=12).fill = cf
+            ws.cell(row=row, column=12).font = cft
 
         # Altura dinâmica baseada no conteúdo
         max_len = max(len(str(relato or "")), len(str(ocorrencia or "")))
@@ -639,9 +645,10 @@ def gerar_csv_visao_geral(resultados: list) -> str:
     writer = csv.writer(buf)
 
     writer.writerow([
-        "ID", "Sigla", "Nome", "Trecho", "Status",
-        "Ocorrência", "Relato", "Atualização", "Confiança (%)",
-        "Atraso (min)", "Distância (km)", "Link Waze", "Link Google Maps",
+        "ID", "Sigla (Rodovia)", "Nome", "Trecho", "Status",
+        "Ocorrência", "Descrição / Observações", "Duração normal",
+        "Duração atual", "Atraso (min)", "Jam Factor", "Confiança (%)",
+        "Link Waze", "Link Google Maps", "Atualização",
     ])
 
     for r in resultados:
@@ -653,12 +660,14 @@ def gerar_csv_visao_geral(resultados: list) -> str:
             r.get("status", ""),
             r.get("ocorrencia", ""),
             r.get("relato", ""),
-            r.get("hora_atualizacao", ""),
-            r.get("confianca_pct", ""),
+            r.get("duracao_normal_min", ""),
+            r.get("duracao_transito_min", ""),
             r.get("atraso_min", ""),
-            r.get("distancia_km", ""),
+            r.get("jam_factor_max", ""),
+            r.get("confianca_pct", ""),
             r.get("link_waze", ""),
             r.get("link_gmaps", ""),
+            r.get("hora_atualizacao", ""),
         ])
 
     return buf.getvalue()

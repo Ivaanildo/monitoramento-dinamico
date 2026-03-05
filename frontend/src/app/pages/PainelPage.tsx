@@ -428,7 +428,7 @@ export default function PainelPage() {
                 >
                   <RouteCard
                     {...road}
-                    onVerObs={(id) => navigate(`/consulta?rota_id=${id}`)}
+                    onVerObs={(id) => window.open(`/consulta?rota_id=${id}`, '_blank')}
                   />
                 </motion.div>
               ))}

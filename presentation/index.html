@@ -591,10 +591,12 @@
     </div>
   </section>
 
-  <!-- ===== SLIDE 2: CONTEXTO E PROBLEMA ===== -->
+  <!-- ===== SLIDE 2: DOR OPERACIONAL & LEITURA ANALÍTICA ===== -->
   <section class="slide" data-slide="2">
     <div class="slide-inner">
-      <h2 class="animate-in">Contexto: O Problema Operacional</h2>
+      <h2 class="animate-in">Dor Operacional (O Problema Real) e Leitura Analítica de Valor</h2>
+      <p class="subtitle animate-in" style="margin-bottom:20px;">Comparativo de eficiência: o que ganhamos na prática
+        com o sistema automátizado</p>
       <div class="compare-cols animate-in delay-1">
         <div class="compare-col compare-before">
           <h3 style="color:var(--red);">Cenário Sem Sistema</h3>
@@ -630,26 +632,24 @@
     </div>
   </section>
 
-  <!-- ===== SLIDE 3: ARQUITETURA ATUAL ===== -->
+  <!-- ===== SLIDE 3: PARTES IMPORTANTES DO SISTEMA ===== -->
   <section class="slide" data-slide="3">
     <div class="slide-inner">
-      <h2 class="animate-in">Arquitetura Atual do Sistema</h2>
-      <p class="subtitle animate-in">Stack completa em produção — Março 2026</p>
+      <h2 class="animate-in">Partes importantes do sistema</h2>
+      <p class="subtitle animate-in">Arquitetura da aplicação completa em produção — Março 2026</p>
       <div class="animate-in delay-1" style="margin:20px 0;">
-        <div class="arch-layer"><span class="layer-label">Frontend</span><span>React + Vite + TypeScript — 3 páginas:
-            Login, Consulta Individual, Painel Corporativo</span></div>
-        <div class="arch-layer"><span class="layer-label">Backend</span><span>FastAPI (Python) — REST API com 15+
-            endpoints, middleware de logging, tratamento de erros estruturado</span></div>
-        <div class="arch-layer"><span class="layer-label">Auth</span><span>Autenticação local via cookie HMAC-SHA256 com
-            sessão de 24h (migração para Supabase Auth planejada)</span></div>
-        <div class="arch-layer"><span class="layer-label">APIs Externas</span><span>Google Routes API v2 (Pro) + HERE
-            Maps (Routing Truck, Incidents, Traffic Flow)</span></div>
-        <div class="arch-layer"><span class="layer-label">Cache</span><span>Cache em memória com TTL de 5 minutos —
-            evita chamadas duplicadas às APIs pagas</span></div>
-        <div class="arch-layer"><span class="layer-label">Persistência</span><span>Supabase (PostgreSQL) — ciclos de
-            consulta + snapshots agregados por rota</span></div>
-        <div class="arch-layer"><span class="layer-label">Deploy</span><span>Frontend via Vercel · Backend local
-            (uvicorn) com possibilidade de containerização</span></div>
+        <div class="arch-layer"><span class="layer-label">Frontend</span><span>React + Vite + TypeScript — Dashboard
+            responsivo e modular com comunicação REST</span></div>
+        <div class="arch-layer"><span class="layer-label">Backend</span><span>Python (FastAPI) — Core da lógica,
+            endpoints concorrentes e tratamento de regras de negócio</span></div>
+        <div class="arch-layer"><span class="layer-label">Integrações</span><span>Google Routes Pro e HERE Maps —
+            Chamadas agendadas via ThreadPoolExecutor para status unificado</span></div>
+        <div class="arch-layer"><span class="layer-label">Dados</span><span>Supabase (PostgreSQL) para histórico
+            temporal / cache robusto local para economia financeira nas consultas</span></div>
+        <div class="arch-layer"><span class="layer-label">Worker</span><span>Tasks assíncronas em plano de fundo
+            responsáveis pelas varreduras automáticas de dados recorrentes</span></div>
+        <div class="arch-layer"><span class="layer-label">Segurança</span><span>Proteção de rotas, chaves encriptadas
+            localmente e refatorações no threat-model inicial.</span></div>
       </div>
       <div class="critical-note animate-in delay-2">
         <strong>⚠ Ponto de atenção:</strong> A autenticação atual é local e temporária. Credenciais ficam no
@@ -659,10 +659,10 @@
     </div>
   </section>
 
-  <!-- ===== SLIDE 4: FLUXO DE DADOS ===== -->
+  <!-- ===== SLIDE 4: FLUXO PONTA A PONTA ===== -->
   <section class="slide" data-slide="4">
     <div class="slide-inner">
-      <h2 class="animate-in">Fluxo de Dados — Da Consulta ao Resultado</h2>
+      <h2 class="animate-in">Fluxo Ponta a Ponta (Como Funciona)</h2>
       <div class="flow-diagram animate-in delay-1" style="margin:28px 0;">
         <div class="flow-box" style="border-color:var(--text-sec);">
           <div style="font-size:1.4em;">👤</div>
@@ -708,17 +708,17 @@
     </div>
   </section>
 
-  <!-- ===== SLIDE 5: O QUE O SISTEMA ENTREGA ===== -->
+  <!-- ===== SLIDE 5: O QUE O SISTEMA RESOLVE ===== -->
   <section class="slide" data-slide="5">
     <div class="slide-inner">
-      <h2 class="animate-in">O Que o Sistema Entrega Hoje</h2>
+      <h2 class="animate-in">O Que o Sistema Resolve (Valor Prático)</h2>
       <div class="card-grid grid-2x3 animate-in delay-1">
         <div class="card card-green">
           <h3>🚦 Status em 4 Níveis</h3>
           <p><span class="badge badge-normal">Normal</span> <span class="badge badge-moderado">Moderado</span> <span
               class="badge badge-intenso">Intenso</span> <span class="badge badge-parado">Parado</span></p>
-          <p class="small" style="margin-top:6px;">Classificação baseada em razão de atraso + atraso absoluto + jam
-            factor</p>
+          <p class="small" style="margin-top:6px;">Decisão baseada no atraso do Google e no <strong>Jam Factor</strong>
+            (índice de 0 a 10 da HERE que mede o nível de congestionamento local).</p>
         </div>
         <div class="card card-accent">
           <h3>⏱️ Tempo e Atraso</h3>
@@ -730,11 +730,12 @@
         </div>
         <div class="card card-accent">
           <h3>🗺️ Mapa Interativo</h3>
-          <p>Rota colorida por tráfego + mapa de calor + badges de incidentes clicáveis</p>
+          <p>Rota colorida por tráfego (verde, laranja e vermelho, extraídos dos dados de fluxo espacial da API HERE) +
+            incidentes clicáveis.</p>
         </div>
         <div class="card card-yellow">
           <h3>📊 Indicador de Confiança</h3>
-          <p>Alta (90%), Média (60%) ou Baixa (20%) — baseado em quantas fontes responderam</p>
+          <p>Alta (100%), Média (50%) ou Sem Dados (0%) — baseado em quantas fontes responderam com sucesso.</p>
         </div>
         <div class="card card-green">
           <h3>📥 Exportação</h3>
@@ -881,9 +882,14 @@
       </div>
       <div class="card-grid grid-2 animate-in delay-2">
         <div class="card card-accent">
-          <h3>Jam Factor: Por que o valor MÁXIMO?</h3>
-          <p>Uma BR com 380 km livres e 50 km parados tem <strong>média baixa</strong> — mas o motorista <strong>vai
-              passar</strong> pelos 50 km parados. O sistema usa <code>jam_factor_max</code>, não a média.</p>
+          <h3>Métricas: Jam Factor Médio vs Máximo</h3>
+          <p>O <strong>Jam Factor</strong> é um índice da API HERE (0 a 10) que quantifica o congestionamento. Uma BR
+            longa com um pequeno trecho bloqueado terá um Jam Factor <strong>MÉDIO baixo</strong>, mas o motorista
+            <strong>obrigatoriamente sofrerá</strong> esse bloqueio. Por isso, nossa métrica-gatilho de status
+            (Intenso/Parado) utiliza sempre o <code>jam_factor_max</code> da rota, impedindo que gargalos severos sejam
+            ocultados pela média. Além disso, o sistema indicará precisamente <strong>interdição parcial</strong> ou
+            <strong>bloqueio total</strong> da via em função das propriedades do incidente lido em tempo real.
+          </p>
         </div>
         <div class="card card-yellow">
           <h3>Regra de rotas longas</h3>
@@ -904,10 +910,10 @@
           <div style="display:flex;align-items:center;gap:14px;">
             <div style="font-size:1.8em;">✅✅</div>
             <div style="flex:1;">
-              <h3 style="color:var(--green);">Alta — 90%</h3>
+              <h3 style="color:var(--green);">Alta — 100%</h3>
               <p>Google + HERE responderam com sucesso</p>
               <div class="bar-track">
-                <div class="bar-fill" style="width:90%;background:var(--green);">90%</div>
+                <div class="bar-fill" style="width:100%;background:var(--green);">100%</div>
               </div>
               <p class="small">Dado confiável para decisão operacional</p>
             </div>
@@ -917,10 +923,10 @@
           <div style="display:flex;align-items:center;gap:14px;">
             <div style="font-size:1.8em;">✅❌</div>
             <div style="flex:1;">
-              <h3 style="color:var(--yellow);">Média — 60%</h3>
+              <h3 style="color:var(--yellow);">Média — 50%</h3>
               <p>Apenas uma fonte respondeu</p>
               <div class="bar-track">
-                <div class="bar-fill" style="width:60%;background:var(--yellow);">60%</div>
+                <div class="bar-fill" style="width:50%;background:var(--yellow);">50%</div>
               </div>
               <p class="small">Usar com cautela — confirmar por outros meios se crítico</p>
             </div>
@@ -930,10 +936,10 @@
           <div style="display:flex;align-items:center;gap:14px;">
             <div style="font-size:1.8em;">❌❌</div>
             <div style="flex:1;">
-              <h3 style="color:var(--red);">Baixa — 20%</h3>
+              <h3 style="color:var(--red);">Sem Dados — 0%</h3>
               <p>Nenhuma fonte respondeu (falha de conectividade ou configuração)</p>
               <div class="bar-track">
-                <div class="bar-fill" style="width:20%;background:var(--red);">20%</div>
+                <div class="bar-fill" style="width:0%;background:var(--red);color:transparent;">0%</div>
               </div>
               <p class="small">Não usar para decisão — consultar manualmente</p>
             </div>
@@ -1218,40 +1224,44 @@
     </div>
   </section>
 
-  <!-- ===== SLIDE 14: HOJE VS FUTURO ===== -->
+  <!-- ===== SLIDE 14: EXTENSÕES FUTURAS ===== -->
   <section class="slide" data-slide="14">
     <div class="slide-inner">
-      <h2 class="animate-in">Estado Atual vs Evolução Planejada</h2>
+      <h2 class="animate-in">Extensões Futuras (Curto, Médio e Longo Prazo)</h2>
       <div class="compare-cols animate-in delay-1">
         <div class="compare-col" style="background:var(--accent-light);border:2px solid var(--accent);">
           <h3 style="color:var(--accent);text-align:center;">✅ IMPLEMENTADO E FUNCIONAL</h3>
           <ul class="clean check">
-            <li>Consulta on-demand com Google + HERE</li>
-            <li>Status em 4 níveis com merge dual-source</li>
-            <li>Mapa interativo com rota colorida + incidentes</li>
-            <li>Exportação Excel/CSV estilizada</li>
-            <li>Favoritos e rotas predefinidas</li>
-            <li>Painel corporativo com 20 rotas</li>
-            <li>Cache inteligente (TTL 5 min)</li>
-            <li>Autenticação local com HMAC</li>
-            <li>Persistência no Supabase</li>
-            <li>Frontend React/TS com deploy Vercel</li>
-            <li>Modo caminhão (HERE Routing Truck)</li>
+            <li>Consulta on-demand rápida com Google + HERE via FastAPI concorrente</li>
+            <li>Status em 4 níveis claros com map interativo (heatmap, badges)</li>
+            <li>Painel corporativo de 20 rotas em ciclos monitorados por Worker</li>
+            <li>Exportação Excel/CSV, Favoritos corporativos e histórico limpo</li>
+            <li>Painel React/TS/Vite responsivo e elegante</li>
+            <li>Modo caminhão especializado (Routing Truck HERE) com filtragem de 200m</li>
           </ul>
         </div>
         <div class="compare-col" style="background:var(--green-light);border:2px solid var(--green);">
           <h3 style="color:var(--green);text-align:center;">🚀 PRÓXIMAS EVOLUÇÕES</h3>
+          <h4
+            style="color:var(--text); margin-top:10px; border-bottom:1px solid #ccc; font-size:1.05em; padding-bottom:3px;">
+            1. Curto Prazo</h4>
           <ul class="clean">
-            <li>Migração de auth para Supabase Auth</li>
-            <li>Alertas por e-mail/SMS em mudança de status</li>
-            <li>Histórico de tráfego ao longo do dia/semana</li>
-            <li>Circuit breaker para APIs externas</li>
-            <li>Cache persistente (Redis ou disco)</li>
-            <li>Worker de monitoramento agendado (cron)</li>
-            <li>Relatórios mensais de desempenho</li>
-            <li>Integração direta com TMS/ERP</li>
-            <li>Predição de tráfego com dados históricos</li>
-            <li>Melhoria do threat model de segurança</li>
+            <li>Migração de autenticação para o Supabase Auth nativo</li>
+            <li>Pach em endpoints expostos e modernização de threat model básico</li>
+          </ul>
+          <h4
+            style="color:var(--text); margin-top:10px; border-bottom:1px solid #ccc; font-size:1.05em; padding-bottom:3px;">
+            2. Médio Prazo</h4>
+          <ul class="clean">
+            <li>Alertas corporativos automáticos por e-mail/SMS para desvios e retenção</li>
+            <li>Camada de circuit breaker / resiliência avançada para as APIs externas</li>
+          </ul>
+          <h4
+            style="color:var(--text); margin-top:10px; border-bottom:1px solid #ccc; font-size:1.05em; padding-bottom:3px;">
+            3. Longo Prazo</h4>
+          <ul class="clean">
+            <li>Integração nativa b2b com ERP/TMS da transportadora</li>
+            <li>Machine Learning: Predição preditiva utilizando a base temporal unificada</li>
           </ul>
         </div>
       </div>
@@ -1261,7 +1271,7 @@
   <!-- ===== SLIDE 15: RESUMO EXECUTIVO ===== -->
   <section class="slide" data-slide="15">
     <div class="slide-inner">
-      <h2 class="animate-in" style="text-align:center;">Resumo Executivo</h2>
+      <h2 class="animate-in" style="text-align:center;">Resumo Executivo Final</h2>
       <div class="card-grid grid-2 animate-in delay-1" style="margin:20px 0;">
         <div class="card" style="border-top:4px solid var(--accent);">
           <h3 style="color:var(--accent);">O QUE É</h3>

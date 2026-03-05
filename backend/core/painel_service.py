@@ -10,7 +10,7 @@ from datetime import datetime, timezone
 
 from core import consultor, rotas_corporativas
 from core.cache import get_cache
-from core.status import inferir_ocorrencia, aplicar_override_ocorrencia
+from core.status import inferir_ocorrencia, aplicar_override_ocorrencia, gerar_observacao
 from storage.repository import salvar_snapshot_agregado
 
 logger = logging.getLogger(__name__)
@@ -45,7 +45,19 @@ def converter_para_resumo_painel(rota_corp: dict, resultado_detalhado: dict) -> 
     )
     status = aplicar_override_ocorrencia(status_base, ocorrencia, float(jam_max), int(atraso_min))
 
-    relato = resultado_detalhado.get("relato") or (incidente_dict.get("descricao", "") if incidente_dict else "")
+    relato = gerar_observacao(
+        inc=incidente_dict if incidente_dict else None,
+        atraso_min=int(atraso_min),
+        dur_normal=int(resultado_detalhado.get("duracao_normal_min", 0)),
+        dur_transito=int(resultado_detalhado.get("duracao_transito_min", 0)),
+        pct_cong=float(resultado_detalhado.get("pct_congestionado", 0)),
+        jam_avg=float(resultado_detalhado.get("jam_factor_avg", 0)),
+        vel_atual=float(resultado_detalhado.get("velocidade_atual_kmh", 0)),
+        vel_livre=float(resultado_detalhado.get("velocidade_livre_kmh", 0)),
+        sigla=sigla,
+        hub_origem=hub_o,
+        hub_destino=hub_d,
+    )
 
     hora_atualizacao = resultado_detalhado.get("consultado_em", datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S"))
 
@@ -69,6 +81,9 @@ def converter_para_resumo_painel(rota_corp: dict, resultado_detalhado: dict) -> 
         "hora_atualizacao": hora_atualizacao,
         "confianca_pct": confianca_pct,
         "atraso_min": atraso_min,
+        "duracao_normal_min": resultado_detalhado.get("duracao_normal_min", 0),
+        "duracao_transito_min": resultado_detalhado.get("duracao_transito_min", 0),
+        "jam_factor_max": resultado_detalhado.get("jam_factor_max", 0),
         "distancia_km": resultado_detalhado.get("distancia_km", 0),
         "link_waze": resultado_detalhado.get("link_waze", ""),
         "link_gmaps": resultado_detalhado.get("link_gmaps", ""),
@@ -163,6 +178,9 @@ async def obter_painel_agregado(config: dict) -> dict:
                 "hora_atualizacao": hora_atualizacao,
                 "confianca_pct": confianca_pct,
                 "atraso_min": atraso_min,
+                "duracao_normal_min": snap.get("duracao_normal_min", 0) if snap else 0,
+                "duracao_transito_min": snap.get("duracao_transito_min", 0) if snap else 0,
+                "jam_factor_max": snap.get("jam_factor_max", 0) if snap else 0,
                 "distancia_km": r.get("distance_km", 0),
                 "dados_origem": "snapshot",
             })

@@ -16,6 +16,7 @@ import {
     Info,
     Wind,
     Activity,
+    Download,
 } from "lucide-react";
 import { api } from "../services/api";
 import { RadarIcon } from "../components/RadarIcon";
@@ -241,6 +242,63 @@ export default function ConsultaPage() {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [rotaId]);
 
+    const handleDownloadCSV = () => {
+        if (!data) return;
+
+        const escapeCSV = (val: any) => {
+            if (val == null) return '""';
+            const str = String(val);
+            return `"${str.replace(/"/g, '""')}"`;
+        };
+
+        const headers = [
+            "ID", "Status", "Origem", "Destino",
+            "Atraso (min)", "Duracao Normal (min)", "Duracao c/ Transito (min)",
+            "Distancia (km)", "Vel Atual (km/h)", "Congestionado (%)",
+            "Jam Avg", "Jam Max", "Confianca (%)"
+        ];
+
+        const row = [
+            escapeCSV(data.rota_id),
+            escapeCSV(data.status),
+            escapeCSV(data.hub_origem || data.origem || ''),
+            escapeCSV(data.hub_destino || data.destino || ''),
+            data.atraso_min || 0,
+            data.duracao_normal_min || 0,
+            data.duracao_transito_min || 0,
+            (data.distancia_km || 0).toFixed(2),
+            (data.velocidade_atual_kmh || 0).toFixed(1),
+            (data.pct_congestionado || 0).toFixed(1),
+            (data.jam_factor_avg || 0).toFixed(2),
+            (data.jam_factor_max || 0).toFixed(2),
+            data.confianca_pct || 0
+        ];
+
+        const csvContent = "\uFEFF" + headers.join(";") + "\n" + row.join(";");
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.setAttribute("href", url);
+        link.setAttribute("download", `visao_geral_${data.rota_id}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+    };
+
+    const handleDownloadJSON = () => {
+        if (!data) return;
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.setAttribute("href", url);
+        link.setAttribute("download", `visao_geral_${data.rota_id}.json`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+    };
+
     const theme = data ? (STATUS_THEME[data.status] || STATUS_THEME["N/A"]) : STATUS_THEME["N/A"];
     const StatusIcon = theme.icon;
 
@@ -302,6 +360,24 @@ export default function ConsultaPage() {
                         {data.cache_hit && (
                             <span className="text-xs text-gray-500 italic">cache</span>
                         )}
+                        <button
+                            onClick={handleDownloadCSV}
+                            title="Exportar como CSV (Excel)"
+                            className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg font-bold transition-colors"
+                            style={{ background: "#1a361a", color: "#4ade80", border: "1px solid #22c55e44" }}
+                        >
+                            <Download size={12} />
+                            Excel
+                        </button>
+                        <button
+                            onClick={handleDownloadJSON}
+                            title="Exportar dados puros (JSON)"
+                            className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg font-bold transition-colors"
+                            style={{ background: "#2a2a2a", color: "#9ca3af", border: "1px solid #444" }}
+                        >
+                            <Download size={12} />
+                            JSON
+                        </button>
                         <button
                             onClick={fetchRealtime}
                             className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg font-bold transition-colors"

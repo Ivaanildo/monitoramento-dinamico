@@ -1,0 +1,41 @@
+outro ponto interessante é que a coluna de Descrição / Observação que é gerado o (excel)siga esse modelo de detalhe , lógico com dados reais , 
+
+
+Descricao / Observacoes
+Engarrafamento (Google Maps) em BR-116 / BR-101: Atraso 37 min | Atraso estimado: 37 min | Google: lentidao no trecho inicial
+Engarrafamento (Google Maps) em BR-381 / BR-116: Atraso 49 min | Atraso estimado: 49 min | Google: lentidao no trecho inicial
+Engarrafamento (Google Maps) em BR-116 (Dutra): Atraso 20 min | Atraso estimado: 20 min | Google: lentidao no trecho inicial
+Engarrafamento (Google Maps) em BR-381 (Fernão Dias): Atraso 28 min | Atraso estimado: 28 min | Google: lentidao no trecho inicial
+Engarrafamento (Google Maps) em BR-116 (Régis Bittencourt): Atraso 49 min | Atraso estimado: 49 min | Google: lentidao no trecho inicial
+Engarrafamento (Google Maps) em BR-116: Atraso 43 min | Atraso estimado: 43 min | Google: lentidao no trecho inicial
+Engarrafamento (Google Maps) em BR-050: Atraso 26 min | Atraso estimado: 26 min | Google: lentidao no trecho inicial
+Engarrafamento (Google Maps) em BR-116: Atraso 32 min | Atraso estimado: 32 min | Google: lentidao no trecho inicial
+Engarrafamento (Google Maps) em BR-116: Atraso 16 min | Atraso estimado: 16 min | Google: lentidao no trecho inicial
+Engarrafamento (Google Maps) em BR-116: Atraso 22 min | Atraso estimado: 22 min | Google: lentidao no trecho inicial e trecho central
+Engarrafamento (Google Maps) em BR-101 / BR-116: Atraso 41 min | Atraso estimado: 41 min
+Engarrafamento (Google Maps) em BR-050: Atraso 37 min | Atraso estimado: 37 min | Google: lentidao no trecho inicial
+Via BR-101 / BR-376, sentido Santa Catarina (GCR) -> Paraná (Curitiba) sem anormalidades, fluxo livre
+Engarrafamento (Google Maps) em BR-116 / BR-101: Atraso 48 min | Atraso estimado: 48 min
+Engarrafamento (Google Maps) em BR-040: Atraso 32 min | Atraso estimado: 32 min | Google: lentidao no trecho inicial e trecho central
+Via BR-101, sentido Bahia (Lauro de Freitas) -> Sergipe (Aracaju) sem anormalidades, fluxo livre
+Via BR-101, sentido Bahia (Lauro de Freitas) -> Pernambuco (Cabo) sem anormalidades, fluxo livre
+Engarrafamento (Google Maps) em BR-364: Atraso 31 min | Atraso estimado: 31 min | Google: lentidao no trecho inicial
+Engarrafamento (Google Maps) em BR-262: Atraso 41 min | Atraso estimado: 41 min | Google: lentidao no trecho inicial
+Engarrafamento (Google Maps) em BR-101: Atraso 15 min | Atraso estimado: 15 min.
+
+objetivo -> ao usuario clicar em "obs" o card vem com descrição / observação da via um breve resumo ao todo para contexto sem cita jam factor 
+
+
+outro ponto que precisa add ao excel é a coluna ocorrencia e os tipos de ocorrencias baseado em cores de fundos responsivas do excel : engarrafamento , colisão .. e outras ocorrencias que não estão sendo geradas nem no excel e nem no frontend frontal do " card ".
+
+objetivo:
+ trazer ao card frontal do frontend a ocorrencia no card e as obs descrição/observação detalhada no verso ... proviniente do excel gerado 
+
+
+outro ponto tamb´me é que o excel gera um dado de 14 minutos de atraso e quando eu clico em visão geral tá outro dado ... verefique essa divergencia detalhadamente e possiveis erros de lógica ou de negocio .
+
+e é interessante definir trafego normal atraso abaixo de 20 minutos. moderado = 20 a 30 minutos lógico se não for causa colisão ou interdição total em funça de acidente ou outra coisa mais grave .. e intenso acima de 30 ... verefique se faz sentido para ajustar a lógica do negocio... 
+
+use como exemplo alguns cases que eu resolvi em C:\Users\Administrador\Desktop\Automação Monitaramento de rotas Logisticas\monitor-rodovias
+
+os docs.md tem contexto provavelmnte da solução ...
