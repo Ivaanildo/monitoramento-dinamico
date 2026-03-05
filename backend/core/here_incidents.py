@@ -820,6 +820,13 @@ def _consultar_incidents_zones(api_key: str, zones: list[str]) -> list:
                         parsed = _parse_incidente(item)
                         if parsed:
                             resultados_brutos.append(parsed)
+        except requests.exceptions.HTTPError as e:
+            status_code = e.response.status_code if e.response is not None else "?"
+            try:
+                body = e.response.json() if e.response is not None else ""
+            except Exception:
+                body = (e.response.text or "")[:200] if e.response is not None else ""
+            logger.warning(f"HERE Incidents zone falhou HTTP {status_code}: {body}")
         except requests.exceptions.RequestException as e:
             logger.warning(f"HERE Incidents zone falhou: {_sanitizar_erro(e, api_key)}")
 
@@ -844,6 +851,13 @@ def _consultar_flow_zones(api_key: str, zones: list[str]) -> list:
             data = _validar_json_response(resp, contexto="HERE Flow")
             if data:
                 flow_results.extend(data.get("results", []))
+        except requests.exceptions.HTTPError as e:
+            status_code = e.response.status_code if e.response is not None else "?"
+            try:
+                body = e.response.json() if e.response is not None else ""
+            except Exception:
+                body = (e.response.text or "")[:200] if e.response is not None else ""
+            logger.warning(f"HERE Flow zone falhou HTTP {status_code}: {body}")
         except requests.exceptions.RequestException as e:
             logger.warning(f"HERE Flow zone falhou: {_sanitizar_erro(e, api_key)}")
     return flow_results
@@ -950,6 +964,18 @@ def consultar(
             fut_flow = pool.submit(_consultar_flow_zones, api_key, zones_flow)
             incidentes_brutos = fut_inc.result(timeout=30)
             flow_results = fut_flow.result(timeout=30)
+
+        # Se corridor falhou (ambos vazios), tenta bbox fallback
+        if usar_corridor and not incidentes_brutos and not flow_results:
+            logger.info("HERE corridor sem resultado — tentando bbox fallback")
+            zones_bbox = _gerar_bboxes_fallback(lat1, lng1, lat2, lng2, dist_rota_km)
+            with ThreadPoolExecutor(max_workers=2) as pool:
+                fut_inc = pool.submit(_consultar_incidents_zones, api_key, zones_bbox)
+                fut_flow = pool.submit(_consultar_flow_zones, api_key, zones_bbox)
+                incidentes_brutos = fut_inc.result(timeout=30)
+                flow_results = fut_flow.result(timeout=30)
+            usar_corridor = False
+            resultado["metodo_busca"] = "bbox_fallback"
 
         incidentes_pos_bbox = incidentes_brutos
         if not usar_corridor:
