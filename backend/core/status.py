@@ -132,10 +132,28 @@ def gerar_observacao(
     elif atraso_min > 0:
         partes.append(f"+ Atraso de ~{atraso_min}min")
 
-    if not inc and pct_cong > 0:
-        partes.append(f"Congestionamento: {pct_cong:.0f}% da via (jam médio {jam_avg:.1f})")
-
     if vel_atual > 0 and vel_livre > 0 and not partes:
         partes.append(f"Vel. atual: {vel_atual:.0f}km/h (livre: {vel_livre:.0f}km/h)")
 
-    return " | ".join(partes) if partes else "Fluxo livre no trecho monitorado"
+    return " | ".join(partes) if partes else "Sem anormalidades no trecho monitorado"
+
+
+def inferir_ocorrencia(incidente_principal: dict | None, jam_max: float, atraso_min: int) -> str:
+    """Retorna categoria de ocorrência, inferindo Engarrafamento se necessário."""
+    if incidente_principal:
+        return incidente_principal.get("categoria", "")
+    if jam_max >= 5 or atraso_min >= 15:
+        return "Engarrafamento"
+    return ""
+
+
+def aplicar_override_ocorrencia(status_base: str, ocorrencia_tipo: str,
+                                 jam_max: float = 0, atraso_min: int = 0) -> str:
+    """Eleva status conforme o tipo de ocorrência detectada."""
+    if ocorrencia_tipo == "Interdição":
+        return mais_severo(status_base, "Parado")
+    if ocorrencia_tipo in ("Colisão", "Acidente"):
+        return mais_severo(status_base, "Intenso")
+    if ocorrencia_tipo == "Bloqueio Parcial":
+        return mais_severo(status_base, "Moderado")
+    return status_base
