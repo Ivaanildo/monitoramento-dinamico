@@ -232,7 +232,7 @@ export default function ConsultaPage() {
                     consultado_em: snap.ciclo_ts,
                 });
                 setDataSource("snapshot");
-                setLoading(false);
+                fetchRealtime();            // sempre busca dados completos (route_pts)
             })
             .catch(() => {
                 // Snapshot failed — fall through to full real-time consult
