@@ -208,7 +208,7 @@ export default function ConsultaPage() {
         }
         api.getSnapshot(rotaId)
             .then((snap) => {
-                // Populate a minimal ConsultaData from the snapshot
+                // Populate a minimal ConsultaData from the snapshot for fast initial display
                 setData((prev) => prev ?? {
                     rota_id: snap.rota_id,
                     status: snap.status,
@@ -232,7 +232,8 @@ export default function ConsultaPage() {
                     consultado_em: snap.ciclo_ts,
                 });
                 setDataSource("snapshot");
-                setLoading(false);
+                // Always fetch real-time data to load route geometry (route_pts, flow_pts, etc.)
+                fetchRealtime();
             })
             .catch(() => {
                 // Snapshot failed — fall through to full real-time consult
