@@ -30,9 +30,9 @@ def classificar_transito(duracao_normal_s: float, duracao_transito_s: float) -> 
     atraso_min = max(0, (duracao_transito_s - duracao_normal_s)) / 60
 
     th_intenso = THRESHOLDS_ATRASO_ABS["Intenso"]
-    if razao > THRESHOLDS_RAZAO["Moderado"] or (
-        atraso_min >= th_intenso["min_atraso_min"] and razao > th_intenso["min_razao"]
-    ):
+    if (razao > THRESHOLDS_RAZAO["Moderado"]
+            or (atraso_min >= th_intenso["min_atraso_min"] and razao > th_intenso["min_razao"])
+            or atraso_min > 25):          # rota longa: atraso alto força Intenso
         return "Intenso"
 
     th_moderado = THRESHOLDS_ATRASO_ABS["Moderado"]
@@ -78,23 +78,14 @@ def calcular_confianca(google_ok: bool, here_ok: bool, atraso_min: int) -> tuple
     """Calcula confiança textual e percentual baseado nas fontes disponíveis.
 
     Returns:
-        (texto, percentual) — ex: ("Alta", 85)
+        (texto, percentual) — ex: ("Alta", 100)
     """
     if google_ok and here_ok:
-        base = 90
-        label = "Alta"
+        return "Alta", 100
     elif google_ok or here_ok:
-        base = 60
-        label = "Média"
+        return "Média", 50
     else:
-        return "Baixa", 20
-
-    # Penalidade se atraso muito alto (dados suspeitos)
-    if atraso_min >= 90:
-        base -= 10
-
-    pct = max(20, min(100, base))
-    return label, pct
+        return "Baixa", 0
 
 
 def incidente_principal(incidentes: list) -> dict | None:
