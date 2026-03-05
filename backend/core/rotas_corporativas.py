@@ -26,7 +26,7 @@ def carregar_rotas(config: dict) -> list[dict]:
         return []
 
     try:
-        with open(p, encoding="utf-8") as f:
+        with open(p, encoding="utf-8-sig") as f:
             dados = json.load(f)
     except Exception as e:
         logger.error(f"Erro ao ler arquivo corporativo {p}: {e}")

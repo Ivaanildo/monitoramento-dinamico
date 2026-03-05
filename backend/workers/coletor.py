@@ -31,16 +31,19 @@ async def _consultar_lote_rotas(rotas, config):
     async def _consultar_uma(rota: dict) -> dict:
         kwargs = rotas_corporativas.converter_para_parametros_consulta(rota)
         try:
-            # consultor.consultar e sincrono; executa em thread separada
-            resultado_det = await loop.run_in_executor(
-                None,
-                lambda: consultor.consultar(
-                    config,
-                    origem=kwargs["origem"],
-                    destino=kwargs["destino"],
-                    via=kwargs["via"] or None,
-                    rodovia_logica=kwargs["rodovia_logica"] or None,
+            # consultor.consultar e sincrono; executa em thread separada com timeout
+            resultado_det = await asyncio.wait_for(
+                loop.run_in_executor(
+                    None,
+                    lambda: consultor.consultar(
+                        config,
+                        origem=kwargs["origem"],
+                        destino=kwargs["destino"],
+                        via=kwargs["via"] or None,
+                        rodovia_logica=kwargs["rodovia_logica"] or None,
+                    ),
                 ),
+                timeout=90,
             )
             return painel_service.converter_para_resumo_painel(rota, resultado_det)
         except Exception as exc:

@@ -18,6 +18,13 @@ logger = logging.getLogger(__name__)
 _CACHE_KEY_PAINEL = "__painel_rotas_corporativas__"
 
 
+def _safe_int(val, default=0):
+    try:
+        return int(val)
+    except (ValueError, TypeError):
+        return default
+
+
 def converter_para_resumo_painel(rota_corp: dict, resultado_detalhado: dict) -> dict:
     """Converte um ResultadoRota (detalhado) no contrato PainelRotasResponse (linha)."""
     
@@ -48,12 +55,6 @@ def converter_para_resumo_painel(rota_corp: dict, resultado_detalhado: dict) -> 
         atraso_min,
     )
     status = aplicar_override_ocorrencia(status_base, ocorrencia, float(jam_max), atraso_min)
-
-    def _safe_int(val, default=0):
-        try:
-            return int(val)
-        except (ValueError, TypeError):
-            return default
 
     relato = gerar_observacao(
         inc=incidente_dict if incidente_dict else None,

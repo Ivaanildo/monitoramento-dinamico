@@ -1,4 +1,4 @@
-{
+﻿{
   "version": 1,
   "provider": "here",
   "api": {
@@ -717,7 +717,8 @@
         "generated_at": "2026-02-26T19:53:32Z",
         "n_points": 5,
         "distance_km": 323.3
-      }
+      },
+      "limite_gap_km": 75
     },
     {
       "id": "R17",
