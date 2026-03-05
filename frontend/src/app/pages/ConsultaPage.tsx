@@ -44,7 +44,7 @@ interface ConsultaData {
     jam_factor_max: number;
     confianca_pct: number;
     confianca: string;
-    incidente_principal?: string;
+    incidente_principal?: { categoria: string; descricao: string; severidade?: string } | null;
     incidentes: { lat?: number; lng?: number; tipo?: string; descricao?: string; severidade?: string; categoria?: string }[];
     route_pts: { lat: number; lng: number }[];
     flow_pts?: { lat: number; lng: number; jam: number }[];
@@ -165,6 +165,7 @@ export default function ConsultaPage() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [elapsed, setElapsed] = useState(0);
+    const [dataSource, setDataSource] = useState<"snapshot" | "realtime" | null>(null);
 
     // Elapsed timer while loading (shows how long the real-time API is taking)
     useEffect(() => {
@@ -173,7 +174,7 @@ export default function ConsultaPage() {
         return () => clearInterval(t);
     }, [loading]);
 
-    const fetchData = () => {
+    const fetchRealtime = () => {
         if (!rotaId) {
             setError("Nenhuma rota selecionada. Volte ao painel.");
             setLoading(false);
@@ -186,6 +187,7 @@ export default function ConsultaPage() {
         api.getConsulta(rotaId)
             .then((d) => {
                 setData(d);
+                setDataSource("realtime");
                 setLoading(false);
             })
             .catch((err: Error) => {
@@ -195,8 +197,47 @@ export default function ConsultaPage() {
             });
     };
 
+    const fetchData = () => fetchRealtime();
+
+    // On mount: try snapshot first for fast initial display
     useEffect(() => {
-        fetchData();
+        if (!rotaId) {
+            setError("Nenhuma rota selecionada. Volte ao painel.");
+            setLoading(false);
+            return;
+        }
+        api.getSnapshot(rotaId)
+            .then((snap) => {
+                // Populate a minimal ConsultaData from the snapshot
+                setData((prev) => prev ?? {
+                    rota_id: snap.rota_id,
+                    status: snap.status,
+                    atraso_min: snap.atraso_min ?? 0,
+                    incidente_principal: snap.ocorrencia_principal
+                        ? { categoria: snap.ocorrencia_principal, descricao: "" }
+                        : null,
+                    duracao_normal_min: 0,
+                    duracao_transito_min: 0,
+                    distancia_km: 0,
+                    velocidade_atual_kmh: 0,
+                    velocidade_livre_kmh: 0,
+                    pct_congestionado: 0,
+                    jam_factor_avg: 0,
+                    jam_factor_max: 0,
+                    confianca_pct: 0,
+                    confianca: "",
+                    incidentes: [],
+                    route_pts: [],
+                    fontes: [],
+                    consultado_em: snap.ciclo_ts,
+                });
+                setDataSource("snapshot");
+                setLoading(false);
+            })
+            .catch(() => {
+                // Snapshot failed — fall through to full real-time consult
+                fetchRealtime();
+            });
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [rotaId]);
 
@@ -248,11 +289,21 @@ export default function ConsultaPage() {
 
                 {data && (
                     <div className="flex items-center gap-2">
+                        {dataSource === "snapshot" && (
+                            <span className="text-xs px-2 py-0.5 rounded font-medium" style={{ background: "#1e3a5f", color: "#93c5fd" }}>
+                                Dados do ciclo
+                            </span>
+                        )}
+                        {dataSource === "realtime" && (
+                            <span className="text-xs px-2 py-0.5 rounded font-medium" style={{ background: "#14532d", color: "#86efac" }}>
+                                Tempo real
+                            </span>
+                        )}
                         {data.cache_hit && (
                             <span className="text-xs text-gray-500 italic">cache</span>
                         )}
                         <button
-                            onClick={fetchData}
+                            onClick={fetchRealtime}
                             className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg font-bold transition-colors"
                             style={{ background: "#2a2a2a", color: "#FFD700", border: "1px solid #444" }}
                         >
@@ -364,7 +415,8 @@ export default function ConsultaPage() {
                                         </div>
                                         {data.incidente_principal && (
                                             <div className="text-xs text-gray-400 mt-0.5">
-                                                {data.incidente_principal}
+                                                {data.incidente_principal.categoria}
+                                                {data.incidente_principal.descricao && ` — ${data.incidente_principal.descricao}`}
                                             </div>
                                         )}
                                     </div>

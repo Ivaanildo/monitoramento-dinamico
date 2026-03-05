@@ -22,4 +22,15 @@ export const api = {
         }
         return res.json();
     },
+
+    getSnapshot: async (rota_id: string) => {
+        const res = await fetch(`${API_BASE}/rotas/${rota_id}/snapshot`, {
+            credentials: "include",
+        });
+        if (!res.ok) {
+            if (res.status === 401) throw new Error("Unauthorized");
+            throw new Error("HTTP " + res.status);
+        }
+        return res.json();
+    },
 }
