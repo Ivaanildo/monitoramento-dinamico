@@ -5,20 +5,8 @@
   "outputDirectory": "frontend/dist",
   "rewrites": [
     {
-      "source": "/auth/:path*",
-      "destination": "https://monitoramento-dinamico-production.up.railway.app/auth/:path*"
-    },
-    {
-      "source": "/painel",
-      "destination": "https://monitoramento-dinamico-production.up.railway.app/painel"
-    },
-    {
-      "source": "/painel/:path*",
-      "destination": "https://monitoramento-dinamico-production.up.railway.app/painel/:path*"
-    },
-    {
-      "source": "/rotas/:path*",
-      "destination": "https://monitoramento-dinamico-production.up.railway.app/rotas/:path*"
+      "source": "/api/:path*",
+      "destination": "https://monitoramento-dinamico-production.up.railway.app/:path*"
     },
     {
       "source": "/(.*)",

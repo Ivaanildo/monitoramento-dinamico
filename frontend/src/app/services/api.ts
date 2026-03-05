@@ -1,6 +1,8 @@
+const API_BASE = "/api";
+
 export const api = {
     get: async (url: string) => {
-        const res = await fetch(url, {
+        const res = await fetch(API_BASE + url, {
             credentials: "include",
         });
         if (!res.ok) {
@@ -11,7 +13,7 @@ export const api = {
     },
 
     getConsulta: async (rota_id: string) => {
-        const res = await fetch(`/rotas/${rota_id}/consultar`, {
+        const res = await fetch(`${API_BASE}/rotas/${rota_id}/consultar`, {
             credentials: "include",
         });
         if (!res.ok) {
