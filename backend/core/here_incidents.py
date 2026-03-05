@@ -97,6 +97,7 @@ SEVERIDADE_MAP = {1: "Baixa", 2: "Média", 3: "Alta", 4: "Crítica"}
 CRITICALITY_TO_ID = {"low": 1, "minor": 2, "major": 3, "critical": 4}
 
 _MAX_VIA_PER_CHUNK = 23  # conservador — limite HERE ~25
+_MAX_CORRIDOR_KM = 450.0  # HERE limita corredor a 500km; usamos 450km como margem
 
 
 def _coords_from_via_str(via_str: str) -> tuple[float, float] | None:
@@ -109,6 +110,35 @@ def _coords_from_via_str(via_str: str) -> tuple[float, float] | None:
     except (ValueError, IndexError):
         pass
     return None
+
+
+def _split_pts_por_distancia(pts: list, max_km: float = _MAX_CORRIDOR_KM) -> list:
+    """Divide lista de pontos em segmentos onde dist acumulada ≤ max_km.
+
+    O último ponto de cada segmento é repetido como primeiro do próximo
+    para garantir continuidade do corredor.
+    """
+    if not pts:
+        return []
+    segmentos: list = []
+    atual = [pts[0]]
+    acum = 0.0
+    for i in range(1, len(pts)):
+        lat1, lng1 = pts[i - 1]
+        lat2, lng2 = pts[i]
+        d = _haversine_km(lat1, lng1, lat2, lng2)
+        if acum + d > max_km and len(atual) >= 2:
+            segmentos.append(atual)
+            atual = [pts[i - 1], pts[i]]
+            acum = d
+        else:
+            atual.append(pts[i])
+            acum += d
+    if len(atual) >= 2:
+        segmentos.append(atual)
+    elif segmentos:
+        segmentos[-1].append(atual[0])
+    return segmentos
 
 
 _HIGHWAY_CODE_PARTS_RE = re.compile(
@@ -931,20 +961,20 @@ def consultar(
         zones_flow: list[str] = []
 
         if route_pts:
-            # Incidents: raio 200m — captura apenas o que toca a rodovia
-            corridor_inc = encode_corridor(route_pts, radius_m=200)
-            # Flow: raio 150m — mais restrito ainda
-            corridor_flow = encode_corridor(route_pts, radius_m=150)
+            # Divide em segmentos ≤ 450km para respeitar limite HERE de 500km/corredor
+            segmentos = _split_pts_por_distancia(route_pts)
+            corridors_inc = [c for s in segmentos if (c := encode_corridor(s, radius_m=200))]
+            corridors_flow = [c for s in segmentos if (c := encode_corridor(s, radius_m=150))]
 
-            if corridor_inc and corridor_flow:
+            if corridors_inc and corridors_flow:
                 usar_corridor = True
-                zones_incidents = [corridor_inc]
-                zones_flow = [corridor_flow]
+                zones_incidents = corridors_inc
+                zones_flow = corridors_flow
                 resultado["route_pts"] = route_pts
                 resultado["route_geojson"] = pts_to_geojson_line(route_pts)
                 resultado["metodo_busca"] = "corridor"
                 logger.info(
-                    f"HERE: rota {dist_rota_km:.0f}km | corridor "
+                    f"HERE: rota {dist_rota_km:.0f}km | {len(segmentos)} corredor(es) "
                     f"({len(route_pts)} pts) | raio incidents=200m flow=150m"
                 )
 
