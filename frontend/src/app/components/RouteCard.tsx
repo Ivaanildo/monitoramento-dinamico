@@ -65,7 +65,8 @@ export function RouteCard(props: RouteCardProps) {
     const displayVia = via || "Rodovia";
 
     // Get occurrence display
-    const displayOcorrencia = ocorrencia || (status === "Normal" ? "Sem Ocorrências" : "Desconhecido");
+    const displayOcorrencia = ocorrencia || "Sem ocorrência";
+    const hasOcorrencia = !!ocorrencia;
 
     return (
         <div
@@ -105,11 +106,15 @@ export function RouteCard(props: RouteCardProps) {
                                 </div>
                             )}
 
-                            {ocorrencia && (
-                                <div className="flex items-center gap-1 text-xs font-bold px-2 py-1 rounded" style={{ backgroundColor: "#fff7ed", color: "#c2410c" }}>
-                                    {displayOcorrencia}
-                                </div>
-                            )}
+                            <div
+                                className="flex items-center gap-1 text-xs font-bold px-2 py-1 rounded"
+                                style={hasOcorrencia
+                                    ? { backgroundColor: "#fff7ed", color: "#c2410c" }
+                                    : { backgroundColor: "#f3f4f6", color: "#9ca3af" }
+                                }
+                            >
+                                {displayOcorrencia}
+                            </div>
                         </div>
 
                         <div className="flex justify-between items-end mt-auto pt-2">
