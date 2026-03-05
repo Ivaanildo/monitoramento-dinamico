@@ -59,8 +59,10 @@ def converter_para_resumo_painel(rota_corp: dict, resultado_detalhado: dict) -> 
         "hora_atualizacao": hora_atualizacao,
         "confianca_pct": confianca_pct,
         "atraso_min": atraso_min,
-        # Trânsito utilidade
-        "distancia_km": resultado_detalhado.get("distancia_km", 0)
+        "distancia_km": resultado_detalhado.get("distancia_km", 0),
+        "link_waze": resultado_detalhado.get("link_waze", ""),
+        "link_gmaps": resultado_detalhado.get("link_gmaps", ""),
+        "incidentes": resultado_detalhado.get("incidentes", []),
     }
 
 

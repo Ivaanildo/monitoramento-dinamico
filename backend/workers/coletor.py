@@ -8,8 +8,10 @@ GitHub Actions.
 """
 import asyncio
 import sys
-import time
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
+
+_BRT = timezone(timedelta(hours=-3))
 
 # Adicionar o diretorio pai ('backend') ao PYTHONPATH para conseguir importar 'core'
 sys.path.insert(0, str(Path(__file__).parent.parent.resolve()))
@@ -76,7 +78,7 @@ async def executar_coleta():
 
     relatorios_dir = Path(__file__).parent.parent / "relatorios"
     relatorios_dir.mkdir(exist_ok=True)
-    nome_arquivo = relatorios_dir / f"painel_{time.strftime('%Y-%m-%d_%H-%M')}.xlsx"
+    nome_arquivo = relatorios_dir / f"painel_{datetime.now(_BRT).strftime('%Y-%m-%d_%H-%M')}.xlsx"
     excel_bytes = gerar_excel_visao_geral(resultados)
     nome_arquivo.write_bytes(excel_bytes)
     print(f"Relatorio Excel salvo: {nome_arquivo}")
