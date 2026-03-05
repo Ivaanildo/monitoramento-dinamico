@@ -300,10 +300,12 @@ export function MapView({ routePts = [], flowPts = [], status, hubOrigem, hubDes
             )}
 
             {incidentes.map((inc, i) => {
-                if (!inc.lat || !inc.lng) return null;
+                const lat = (inc as { lat?: number; latitude?: number }).lat ?? (inc as { latitude?: number }).latitude;
+                const lng = (inc as { lng?: number; longitude?: number }).lng ?? (inc as { longitude?: number }).longitude;
+                if (!lat || !lng) return null;
                 const incIcon = makeLucideIcon(inc);
                 return (
-                    <Marker key={i} position={[inc.lat, inc.lng]} icon={incIcon}>
+                    <Marker key={i} position={[lat, lng]} icon={incIcon}>
                         <Popup>
                             <strong>{inc.tipo || "Incidente"}</strong>
                             {inc.descricao && <><br />{inc.descricao}</>}
