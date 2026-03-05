@@ -8,6 +8,7 @@ GitHub Actions.
 """
 import asyncio
 import sys
+import time
 from pathlib import Path
 
 # Adicionar o diretorio pai ('backend') ao PYTHONPATH para conseguir importar 'core'
@@ -15,6 +16,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent.resolve()))
 
 from core import consultor, painel_service, rotas_corporativas
 from core.config_loader import load_config
+from report.excel_simple import gerar_excel_visao_geral
 from storage import database
 from storage.repository import salvar_snapshot_agregado
 
@@ -71,6 +73,13 @@ async def executar_coleta():
     print("Enviando snapshot agregado para o Supabase...")
 
     salvar_snapshot_agregado(resultados, "google_routes,here_incidents")
+
+    relatorios_dir = Path(__file__).parent.parent / "relatorios"
+    relatorios_dir.mkdir(exist_ok=True)
+    nome_arquivo = relatorios_dir / f"painel_{time.strftime('%Y-%m-%d_%H-%M')}.xlsx"
+    excel_bytes = gerar_excel_visao_geral(resultados)
+    nome_arquivo.write_bytes(excel_bytes)
+    print(f"Relatorio Excel salvo: {nome_arquivo}")
 
     print("Processo finalizado com sucesso!")
 
