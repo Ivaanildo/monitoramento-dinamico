@@ -389,6 +389,36 @@ async def consultar_rota_corporativa(rota_id: str, user: str = Depends(verificar
     return JSONResponse(content=resultado)
 
 
+@app.get("/rotas/{rota_id}/snapshot")
+async def get_snapshot_rota(rota_id: str, user: str = Depends(verificar_autenticacao)):
+    """Retorna o último snapshot do ciclo periódico para a rota informada."""
+    from storage.database import get_supabase
+    client = get_supabase()
+    if not client:
+        raise HTTPException(status_code=503, detail="Banco de dados não disponível")
+    try:
+        resp = client.get(
+            f"/snapshots_rotas?rota_id=eq.{rota_id.upper()}&order=ts_iso.desc&limit=1"
+        )
+        resp.raise_for_status()
+        dados = resp.json()
+    except Exception as e:
+        logger.warning(f"Erro ao buscar snapshot para {rota_id}: {e}")
+        raise HTTPException(status_code=503, detail="Erro ao consultar banco de dados")
+    if not dados:
+        raise HTTPException(status_code=404, detail="Snapshot não encontrado para esta rota")
+    snap = dados[0]
+    return JSONResponse(content={
+        "rota_id": rota_id.upper(),
+        "status": snap.get("status", "N/A"),
+        "atraso_min": snap.get("atraso_min", 0),
+        "ocorrencia_principal": snap.get("ocorrencia_principal") or snap.get("ocorrencia", ""),
+        "observacao_resumo": snap.get("observacao_resumo") or snap.get("descricao", ""),
+        "ciclo_ts": snap.get("ciclo_ts") or snap.get("ts_iso", ""),
+        "dados_origem": "snapshot",
+    })
+
+
 @app.get("/painel")
 async def obter_painel_agregado(user: str = Depends(verificar_autenticacao)):
     """Retorna o resumo consolidado das 20 rotas corporativas."""
