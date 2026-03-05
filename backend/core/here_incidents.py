@@ -96,6 +96,22 @@ CATEGORIA_MAP_INT = {
 SEVERIDADE_MAP = {1: "Baixa", 2: "Média", 3: "Alta", 4: "Crítica"}
 CRITICALITY_TO_ID = {"low": 1, "minor": 2, "major": 3, "critical": 4}
 
+_SEVERIDADE_TO_CODE = {
+    "Crítico": "critical",
+    "Grave": "major",
+    "Moderado": "minor",
+    "Baixo": "low",
+    # aliases em inglês (caso venham direto)
+    "Crítica": "critical",
+    "Alta": "major",
+    "Média": "minor",
+    "Baixa": "low",
+}
+
+
+def _mapear_severidade(severidade: str) -> str:
+    return _SEVERIDADE_TO_CODE.get(severidade, "minor")
+
 _MAX_VIA_PER_CHUNK = 23  # conservador — limite HERE ~25
 _MAX_CORRIDOR_KM = 450.0  # HERE limita corredor a 500km; usamos 450km como margem
 
@@ -802,6 +818,7 @@ def _parse_incidente(item: dict) -> dict | None:
             "categoria": categoria,
             "severidade": severidade,
             "severidade_id": sev_id,
+            "severidade_codigo": _mapear_severidade(severidade),
             "descricao": texto_unificado or "Sem descrição",
             "rodovia_afetada": road_name,
             "road_closed": bloqueio_escopo == "total",
@@ -811,6 +828,8 @@ def _parse_incidente(item: dict) -> dict | None:
             "tipo_raw": tipo_raw,
             "latitude": lat,
             "longitude": lng,
+            "lat": lat,
+            "lng": lng,
             "inicio": inc.get("startTime", ""),
             "fim": inc.get("endTime", ""),
             "fonte": "HERE Traffic",
