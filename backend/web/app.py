@@ -15,7 +15,9 @@ import json
 import logging
 import time
 import uuid
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
+
+_BRT = timezone(timedelta(hours=-3))
 from pathlib import Path
 
 from fastapi import FastAPI, HTTPException, Query, Request, Depends, Response
@@ -605,7 +607,7 @@ async def exportar_painel_excel(user: str = Depends(verificar_autenticacao)):
     resultados = payload.get("resultados", [])
     xlsx_bytes = gerar_excel_visao_geral(resultados)
     
-    data_str = datetime.now().strftime("%Y%m%d_%H%M")
+    data_str = datetime.now(_BRT).strftime("%Y%m%d_%H%M")
     return Response(
         content=xlsx_bytes,
         media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
@@ -620,7 +622,7 @@ async def exportar_painel_csv(user: str = Depends(verificar_autenticacao)):
     resultados = payload.get("resultados", [])
     csv_str = gerar_csv_visao_geral(resultados)
     
-    data_str = datetime.now().strftime("%Y%m%d_%H%M")
+    data_str = datetime.now(_BRT).strftime("%Y%m%d_%H%M")
     return Response(
         content=csv_str.encode("utf-8-sig"),
         media_type="text/csv",

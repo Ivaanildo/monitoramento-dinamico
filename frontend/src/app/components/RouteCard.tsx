@@ -8,7 +8,7 @@ export interface RouteCardProps {
     nome: string;
     trecho: string;
     ocorrencia: string;
-    status: "Normal" | "Moderado" | "Intenso" | "Erro" | "N/A";
+    status: "Normal" | "Moderado" | "Intenso" | "Parado" | "Erro" | "N/A";
     relato: string;
     hora: string;
     atraso_min?: number;
@@ -31,6 +31,11 @@ const STATUS_THEME = {
         border: "#ef4444", // Red 500
         bgLight: "#fef2f2", // Red 50
         text: "#b91c1c", // Red 700
+    },
+    Parado: {
+        border: "#7c3aed", // Violet 600
+        bgLight: "#f5f3ff", // Violet 50
+        text: "#5b21b6", // Violet 800
     },
     Erro: {
         border: "#991b1b",

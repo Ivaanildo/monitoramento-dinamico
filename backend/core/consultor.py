@@ -167,8 +167,15 @@ def consultar(
         flow_fonte = "google" if flow_pts else ""
     metodo_busca = here_result.get("metodo_busca", "bbox") if here_has_route else "bbox"
 
-    # Incidente principal (mais grave)
+    # Incidente principal (mais grave) — retorna dict ou None
     inc_principal = status.incidente_principal(incidentes)
+
+    # Observação rica para exibição no painel
+    relato = status.gerar_observacao(
+        inc_principal,
+        atraso_min, dur_normal, dur_transito,
+        pct_cong, jam_avg, vel_atual, vel_livre,
+    )
 
     # Confiança
     confianca_label, confianca_pct = status.calcular_confianca(google_ok, here_ok, atraso_min)
@@ -211,6 +218,7 @@ def consultar(
         "confianca": confianca_label,
         "confianca_pct": confianca_pct,
         "incidente_principal": inc_principal,
+        "relato": relato,
         "incidentes": incidentes,
         "jam_factor_avg": jam_avg,
         "jam_factor_max": jam_max,

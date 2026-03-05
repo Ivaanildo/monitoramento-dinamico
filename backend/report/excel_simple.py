@@ -11,7 +11,9 @@ Colunas:
 import csv
 import io
 import unicodedata
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
+
+_BRT = timezone(timedelta(hours=-3))
 
 from openpyxl import Workbook
 from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
@@ -178,7 +180,7 @@ def gerar_excel(resultado: dict) -> bytes:
     last_col_letter = get_column_letter(TOTAL_COLS_DETALHADO)
     ws.merge_cells(f"A1:{last_col_letter}1")
     t = ws["A1"]
-    t.value = f"Projeto Zero — Consulta de Rota — {datetime.now().strftime('%d/%m/%Y %H:%M')}"
+    t.value = f"Monitoramento Dinâmico — Consulta de Rota — {datetime.now(_BRT).strftime('%d/%m/%Y %H:%M')}"
     t.font = TITLE_FONT
     t.fill = TITLE_FILL
     t.alignment = CENTER
@@ -345,7 +347,7 @@ def gerar_excel_visao_geral(resultados: list) -> bytes:
     last_col_letter = get_column_letter(TOTAL_COLS_AGREGADO)
     ws.merge_cells(f"A1:{last_col_letter}1")
     t = ws["A1"]
-    t.value = f"Projeto Zero — Visão Geral Analítica — {datetime.now().strftime('%d/%m/%Y %H:%M')}"
+    t.value = f"Monitoramento Dinâmico — Visão Geral Analítica — {datetime.now(_BRT).strftime('%d/%m/%Y %H:%M')}"
     t.font = TITLE_FONT
     t.fill = TITLE_FILL
     t.alignment = CENTER

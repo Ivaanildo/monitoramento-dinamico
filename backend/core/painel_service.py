@@ -35,7 +35,7 @@ def converter_para_resumo_painel(rota_corp: dict, resultado_detalhado: dict) -> 
     
     incidente_dict = resultado_detalhado.get("incidente_principal") or {}
     ocorrencia = incidente_dict.get("categoria", "") if incidente_dict else ""
-    relato = incidente_dict.get("descricao", "") if incidente_dict else ""
+    relato = resultado_detalhado.get("relato") or (incidente_dict.get("descricao", "") if incidente_dict else "")
     
     hora_atualizacao = resultado_detalhado.get("consultado_em", datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S"))
     

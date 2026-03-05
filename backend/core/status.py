@@ -97,10 +97,10 @@ def calcular_confianca(google_ok: bool, here_ok: bool, atraso_min: int) -> tuple
     return label, pct
 
 
-def incidente_principal(incidentes: list) -> str:
-    """Retorna categoria do incidente mais grave da lista HERE."""
+def incidente_principal(incidentes: list) -> dict | None:
+    """Retorna o dict do incidente mais grave da lista HERE, ou None."""
     if not incidentes:
-        return ""
+        return None
     pesos = {
         "Interdição": 5,
         "Bloqueio Parcial": 4,
@@ -110,4 +110,41 @@ def incidente_principal(incidentes: list) -> str:
         "Condição Climática": 1,
         "Ocorrência": 0,
     }
-    return max(incidentes, key=lambda i: pesos.get(i.get("categoria", ""), 0)).get("categoria", "")
+    return max(incidentes, key=lambda i: pesos.get(i.get("categoria", ""), 0))
+
+
+def gerar_observacao(
+    inc: dict | None,
+    atraso_min: int,
+    dur_normal: int,
+    dur_transito: int,
+    pct_cong: float,
+    jam_avg: float,
+    vel_atual: float,
+    vel_livre: float,
+) -> str:
+    """Sintetiza texto rico de observação para exibição no painel."""
+    partes: list[str] = []
+
+    if inc:
+        categoria = inc.get("categoria", "")
+        descricao = inc.get("descricao", "")
+        rodovia = inc.get("rodovia_afetada", "")
+        trecho_inc = f"{categoria}: {descricao}" if descricao else categoria
+        if rodovia:
+            trecho_inc += f" | Rodovia: {rodovia}"
+        if trecho_inc:
+            partes.append(trecho_inc)
+
+    if atraso_min > 0 and dur_normal > 0:
+        partes.append(f"+ Atraso de ~{atraso_min}min (normal:{dur_normal}min, atual:{dur_transito}min)")
+    elif atraso_min > 0:
+        partes.append(f"+ Atraso de ~{atraso_min}min")
+
+    if not inc and pct_cong > 0:
+        partes.append(f"Congestionamento: {pct_cong:.0f}% da via (jam médio {jam_avg:.1f})")
+
+    if vel_atual > 0 and vel_livre > 0 and not partes:
+        partes.append(f"Vel. atual: {vel_atual:.0f}km/h (livre: {vel_livre:.0f}km/h)")
+
+    return " | ".join(partes) if partes else "Fluxo livre no trecho monitorado"

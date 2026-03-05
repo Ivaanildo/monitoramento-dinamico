@@ -12,7 +12,7 @@ interface Road {
   via: string;
   nome: string;
   trecho: string;
-  status: "Normal" | "Moderado" | "Intenso" | "Erro" | "N/A";
+  status: "Normal" | "Moderado" | "Intenso" | "Parado" | "Erro" | "N/A";
   ocorrencia: string;
   relato: string;
   hora: string;
@@ -26,6 +26,7 @@ const STATUS_COLOR = {
   Normal: "#22c55e",
   Moderado: "#f97316",
   Intenso: "#ef4444",
+  Parado: "#7c3aed",
 };
 
 import { useNavigate } from "react-router";
@@ -58,7 +59,7 @@ export default function PainelPage() {
   const [gaugesExpanded, setGaugesExpanded] = useState(true);
 
   // Dynamic values for filters
-  const STATUS_OPTIONS = ["Normal", "Moderado", "Intenso", "Erro"];
+  const STATUS_OPTIONS = ["Normal", "Moderado", "Intenso", "Parado", "Erro"];
   const VIA_OPTIONS = useMemo(() => unique(roads.map((r) => r.via)), [roads]);
   const NOME_OPTIONS = useMemo(() => unique(roads.map((r) => r.nome)), [roads]);
   const TRECHO_OPTIONS = useMemo(() => unique(roads.map((r) => r.trecho)), [roads]);
@@ -142,12 +143,13 @@ export default function PainelPage() {
     } else {
       // Ordenação padrão por severidade: Intenso > Moderado > Normal > Erro > N/A
       const severityOrder: Record<string, number> = {
-        Intenso: 1,
-        Moderado: 2,
-        Normal: 3,
-        Erro: 4,
-        "N/A": 5,
-        "Sem dados": 6,
+        Parado: 1,
+        Intenso: 2,
+        Moderado: 3,
+        Normal: 4,
+        Erro: 5,
+        "N/A": 6,
+        "Sem dados": 7,
       };
       data = [...data].sort((a, b) => {
         const sa = severityOrder[a.status] ?? 99;
