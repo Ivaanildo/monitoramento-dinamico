@@ -36,7 +36,7 @@ def test_geracao_painel_csv_estrutura():
     }]
     csv_str = gerar_csv_visao_geral(mock_resultados)
     assert isinstance(csv_str, str)
-    assert "ID,Sigla,Nome,Trecho,Status" in csv_str
+    assert "ID,Sigla (Rodovia),Nome,Trecho,Status" in csv_str
     assert "R01,BR-116,O -> D,O / D,Normal" in csv_str
 
 def test_geracao_detalhado_excel_estrutura():

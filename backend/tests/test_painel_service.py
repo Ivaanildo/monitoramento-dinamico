@@ -28,7 +28,8 @@ def test_converter_para_resumo_painel():
     assert resumo["trecho"] == "Sao Paulo / Cabo"
     assert resumo["status"] == "Intenso"
     assert resumo["ocorrencia"] == "Acidente"
-    assert resumo["relato"] == "Colisao na via"
+    assert "Acidente (Google Maps) em BR-116 / BR-101" in resumo["relato"]
+    assert "Atraso 15 min" in resumo["relato"]
     assert resumo["hora_atualizacao"] == "2026-03-03T12:00:00Z"
     assert resumo["confianca_pct"] == 90
     assert resumo["atraso_min"] == 15
@@ -44,6 +45,6 @@ def test_converter_para_resumo_painel_fallback():
     assert resumo["sigla"] == "Desconhecida"
     assert resumo["status"] == "Erro"
     assert resumo["ocorrencia"] == ""
-    assert resumo["relato"] == ""
+    assert "fluxo livre" in resumo["relato"]
     assert resumo["confianca_pct"] == 0
     assert resumo["atraso_min"] == 0
