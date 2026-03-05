@@ -45,17 +45,19 @@ def classificar_transito(duracao_normal_s: float, duracao_transito_s: float) -> 
 
 
 def status_de_jam(jam_factor_max: float, jam_factor_avg: float,
-                  road_closed: bool = False) -> str:
+                  road_closed: bool = False, pct_cong: float = 0) -> str:
     """Classifica status HERE a partir do jam factor.
 
     Usa jam_factor_max para capturar congestionamentos localizados
     que a média dilui (ex: BR-381 com 50km parados + 380km livres).
+    Requer pct_cong >= 15 para promover a Intenso (evita falsos positivos
+    por um único segmento ruim em rodovias longas).
     """
     if road_closed:
         return "Parado"
     if jam_factor_max >= 10:
         return "Parado"
-    if jam_factor_max >= 8:
+    if jam_factor_max >= 8 and pct_cong >= 15:
         return "Intenso"
     if jam_factor_max >= 5 or jam_factor_avg >= 5:
         return "Moderado"
