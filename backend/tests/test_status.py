@@ -1,6 +1,12 @@
 """Testes unitários para backend/core/status.py."""
 import pytest
-from core.status import classificar_transito, status_de_jam, calcular_confianca
+from core.status import (
+    classificar_transito,
+    status_de_jam,
+    calcular_confianca,
+    aplicar_override_ocorrencia,
+    inferir_ocorrencia,
+)
 
 
 # ── helpers ──────────────────────────────────────────────────────────────────
@@ -82,3 +88,55 @@ class TestCalcularConfianca:
 
     def test_baixa(self):
         assert calcular_confianca(False, False, 0) == ("Baixa", 0)
+
+
+# ── aplicar_override_ocorrencia ───────────────────────────────────────────────
+
+class TestAplicarOverrideOcorrencia:
+    def test_interdicao_eleva_para_parado(self):
+        assert aplicar_override_ocorrencia("Normal", "Interdição") == "Parado"
+
+    def test_interdicao_mantem_parado(self):
+        assert aplicar_override_ocorrencia("Parado", "Interdição") == "Parado"
+
+    def test_colisao_eleva_para_intenso(self):
+        assert aplicar_override_ocorrencia("Normal", "Colisão") == "Intenso"
+
+    def test_colisao_nao_rebaixa_parado(self):
+        assert aplicar_override_ocorrencia("Parado", "Colisão") == "Parado"
+
+    def test_acidente_eleva_para_intenso(self):
+        assert aplicar_override_ocorrencia("Moderado", "Acidente") == "Intenso"
+
+    def test_bloqueio_parcial_eleva_para_moderado(self):
+        assert aplicar_override_ocorrencia("Normal", "Bloqueio Parcial") == "Moderado"
+
+    def test_bloqueio_parcial_nao_rebaixa_intenso(self):
+        assert aplicar_override_ocorrencia("Intenso", "Bloqueio Parcial") == "Intenso"
+
+    def test_engarrafamento_sem_override(self):
+        assert aplicar_override_ocorrencia("Moderado", "Engarrafamento") == "Moderado"
+
+    def test_sem_ocorrencia(self):
+        assert aplicar_override_ocorrencia("Normal", "") == "Normal"
+
+
+# ── inferir_ocorrencia ────────────────────────────────────────────────────────
+
+class TestInferirOcorrencia:
+    def test_usa_categoria_do_incidente(self):
+        inc = {"categoria": "Colisão", "descricao": "Acidente na pista"}
+        assert inferir_ocorrencia(inc, jam_max=0, atraso_min=0) == "Colisão"
+
+    def test_infere_engarrafamento_por_jam(self):
+        assert inferir_ocorrencia(None, jam_max=6, atraso_min=0) == "Engarrafamento"
+
+    def test_infere_engarrafamento_por_atraso(self):
+        assert inferir_ocorrencia(None, jam_max=0, atraso_min=15) == "Engarrafamento"
+
+    def test_sem_ocorrencia_quando_tudo_normal(self):
+        assert inferir_ocorrencia(None, jam_max=2, atraso_min=5) == ""
+
+    def test_incidente_tem_prioridade_sobre_jam(self):
+        inc = {"categoria": "Obras na Pista"}
+        assert inferir_ocorrencia(inc, jam_max=8, atraso_min=20) == "Obras na Pista"
