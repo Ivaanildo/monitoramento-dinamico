@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { FilterDropdown } from "../components/FilterDropdown";
 import { GaugeChart } from "../components/GaugeChart";
@@ -184,14 +184,14 @@ export default function PainelPage() {
     return ["✔  Fluxo normal em todas as vias no momento"];
   }, [filteredRoads, countIntenso, countModerado]);
 
-  const handleSort = (key: SortKey) => {
+  const handleSort = useCallback((key: SortKey) => {
     if (sortKey === key) {
       setSortDir((d) => (d === "asc" ? "desc" : "asc"));
     } else {
       setSortKey(key);
       setSortDir("asc");
     }
-  };
+  }, [sortKey]);
 
   const SortIcon = ({ col }: { col: SortKey }) => {
     if (sortKey !== col) return <ArrowUpDown size={12} className="opacity-40 ml-1" />;

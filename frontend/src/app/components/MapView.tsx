@@ -288,7 +288,7 @@ export function MapView({ routePts = [], flowPts = [], status, hubOrigem, hubDes
             )}
 
             {viaCoords && viaCoords.map((pt, idx) => (
-                <Marker key={`via-${idx}`} position={[pt.lat, pt.lng]} icon={makeDivIcon("#9ca3af", `${idx + 1}`)}>
+                <Marker key={`via-${pt.lat.toFixed(5)}-${pt.lng.toFixed(5)}`} position={[pt.lat, pt.lng]} icon={makeDivIcon("#9ca3af", `${idx + 1}`)}>
                     <Popup>Ponto Intermediário {idx + 1}</Popup>
                 </Marker>
             ))}
@@ -305,7 +305,7 @@ export function MapView({ routePts = [], flowPts = [], status, hubOrigem, hubDes
                 if (!lat || !lng) return null;
                 const incIcon = makeLucideIcon(inc);
                 return (
-                    <Marker key={i} position={[lat, lng]} icon={incIcon}>
+                    <Marker key={`inc-${lat.toFixed(5)}-${lng.toFixed(5)}-${i}`} position={[lat, lng]} icon={incIcon}>
                         <Popup>
                             <strong>{inc.tipo || "Incidente"}</strong>
                             {inc.descricao && <><br />{inc.descricao}</>}

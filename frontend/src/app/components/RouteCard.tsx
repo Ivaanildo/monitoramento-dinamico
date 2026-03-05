@@ -3,7 +3,7 @@ import { ArrowRight, ArrowLeft, Map } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 
 export interface RouteCardProps {
-    id: string;
+    id: string | number;
     via: string;
     nome: string;
     trecho: string;
@@ -13,7 +13,7 @@ export interface RouteCardProps {
     hora: string;
     atraso_min?: number;
     confianca_pct?: number;
-    onVerObs?: (id: string) => void;
+    onVerObs?: (id: string | number) => void;
 }
 
 const STATUS_THEME = {

@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { api } from "../services/api";
 import { RadarIcon } from "../components/RadarIcon";
+import { ErrorBoundaryFallback } from "../components/ErrorBoundaryFallback";
 
 // ─── Lazy-load MapView to avoid SSR issues with Leaflet ──────────────────────
 const MapView = React.lazy(() =>
@@ -718,23 +719,31 @@ export default function ConsultaPage() {
                     )}
 
                     {!loading && data && (
-                        <React.Suspense
+                        <ErrorBoundaryFallback
                             fallback={
                                 <div className="w-full h-full flex items-center justify-center" style={{ background: "#1a1a1a" }}>
-                                    <div className="text-gray-400 text-sm">Carregando mapa…</div>
+                                    <div className="text-gray-400 text-sm">Erro ao renderizar mapa.</div>
                                 </div>
                             }
                         >
-                            <MapView
-                                routePts={data.route_pts || []}
-                                flowPts={data.flow_pts || []}
-                                viaCoords={data.via_coords || []}
-                                status={data.status}
-                                hubOrigem={data.hub_origem || "Origem"}
-                                hubDestino={data.hub_destino || "Destino"}
-                                incidentes={data.incidentes || []}
-                            />
-                        </React.Suspense>
+                            <React.Suspense
+                                fallback={
+                                    <div className="w-full h-full flex items-center justify-center" style={{ background: "#1a1a1a" }}>
+                                        <div className="text-gray-400 text-sm">Carregando mapa…</div>
+                                    </div>
+                                }
+                            >
+                                <MapView
+                                    routePts={data.route_pts || []}
+                                    flowPts={data.flow_pts || []}
+                                    viaCoords={data.via_coords || []}
+                                    status={data.status}
+                                    hubOrigem={data.hub_origem || "Origem"}
+                                    hubDestino={data.hub_destino || "Destino"}
+                                    incidentes={data.incidentes || []}
+                                />
+                            </React.Suspense>
+                        </ErrorBoundaryFallback>
                     )}
                 </div>
             </div>
