@@ -39,17 +39,22 @@ def salvar_snapshot_agregado(resultados: list, font_list: str = "google,here"):
         # 2. Prepara e insere os snapshots
         registros = []
         for r in resultados:
+            ocorrencia = r.get("ocorrencia_principal") or r.get("ocorrencia", "")
+            observacao = r.get("observacao_resumo") or r.get("relato", "")
             registros.append({
                 "ciclo_id": ciclo_id,
+                "rota_id": r.get("rota_id", ""),
                 "trecho": r.get("trecho", ""),
-                "rodovia": r.get("sigla", ""),  # Sigla ex: BR-116
+                "rodovia": r.get("sigla", ""),
                 "status": r.get("status", "Normal"),
-                "ocorrencia": r.get("ocorrencia", "N/A"),
-                "descricao": r.get("relato", ""),
+                "ocorrencia": ocorrencia,
+                "ocorrencia_principal": ocorrencia,
+                "descricao": observacao,
+                "observacao_resumo": observacao,
                 "atraso_min": r.get("atraso_min", 0),
                 "confianca_pct": r.get("confianca_pct", 0),
                 "conflito_fontes": 0,
-                "ts_iso": agora_iso
+                "ts_iso": agora_iso,
             })
 
         if registros:
