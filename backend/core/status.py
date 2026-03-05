@@ -13,8 +13,8 @@ THRESHOLDS_RAZAO = {
 
 # Atraso absoluto (minutos) — complementa a razão para rotas longas
 THRESHOLDS_ATRASO_ABS = {
-    "Moderado": {"min_atraso_min": 10, "min_razao": 1.03},
-    "Intenso":  {"min_atraso_min": 25, "min_razao": 1.05},
+    "Moderado": {"min_atraso_min": 20, "min_razao": 1.03},
+    "Intenso":  {"min_atraso_min": 30, "min_razao": 1.05},
 }
 
 # Ordem de severidade
@@ -32,7 +32,7 @@ def classificar_transito(duracao_normal_s: float, duracao_transito_s: float) -> 
     th_intenso = THRESHOLDS_ATRASO_ABS["Intenso"]
     if (razao > THRESHOLDS_RAZAO["Moderado"]
             or (atraso_min >= th_intenso["min_atraso_min"] and razao > th_intenso["min_razao"])
-            or atraso_min > 25):          # rota longa: atraso alto força Intenso
+            or atraso_min > 30):          # rota longa: atraso alto força Intenso
         return "Intenso"
 
     th_moderado = THRESHOLDS_ATRASO_ABS["Moderado"]
@@ -142,7 +142,7 @@ def inferir_ocorrencia(incidente_principal: dict | None, jam_max: float, atraso_
     """Retorna categoria de ocorrência, inferindo Engarrafamento se necessário."""
     if incidente_principal:
         return incidente_principal.get("categoria", "")
-    if jam_max >= 5 or atraso_min >= 15:
+    if jam_max >= 5 or atraso_min >= 20:
         return "Engarrafamento"
     return ""
 
