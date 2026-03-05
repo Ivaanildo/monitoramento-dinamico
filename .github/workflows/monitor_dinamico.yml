@@ -1,3 +1,5 @@
+# ATENCAO: cada run usa o commit que estava no topo de main NO MOMENTO do disparo.
+# Apos um push, acione Run workflow manualmente so depois de confirmar o SHA no GitHub.
 name: Monitor Dinamico (Pooling)
 
 on:
