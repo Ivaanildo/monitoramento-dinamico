@@ -6,6 +6,7 @@ para consulta on-demand de rota única, sem circuit breaker ou pybreaker).
 import logging
 import os
 import threading
+import time
 from datetime import datetime, timedelta, timezone
 
 import requests
@@ -22,6 +23,11 @@ _SPEED_TO_JAM = {"NORMAL": 0.5, "SLOW": 5.0, "TRAFFIC_JAM": 9.0}
 
 # ===== HTTP Session thread-local com retry =====
 _thread_local = threading.local()
+_rate_lock = threading.Lock()
+_next_allowed_call_ts = 0.0
+_GOOGLE_MAX_INTERMEDIATES_API = 25
+_GOOGLE_MAX_INTERMEDIATES_DEFAULT = 10
+_GOOGLE_MIN_INTERVAL_MS_DEFAULT = 250
 
 
 def _get_sessao() -> requests.Session:
@@ -38,6 +44,39 @@ def _get_sessao() -> requests.Session:
         s.mount("https://", HTTPAdapter(max_retries=retry))
         _thread_local.sessao = s
     return _thread_local.sessao
+
+
+def _ler_int_env(nome: str, padrao: int, *, minimo: int, maximo: int | None = None) -> int:
+    try:
+        valor = int(os.getenv(nome, str(padrao)).strip())
+    except (ValueError, AttributeError):
+        valor = padrao
+    if valor < minimo:
+        valor = minimo
+    if maximo is not None and valor > maximo:
+        valor = maximo
+    return valor
+
+
+def _throttle_google_requests() -> None:
+    global _next_allowed_call_ts
+
+    intervalo_ms = _ler_int_env(
+        "GOOGLE_ROUTES_MIN_INTERVAL_MS",
+        _GOOGLE_MIN_INTERVAL_MS_DEFAULT,
+        minimo=0,
+    )
+    if intervalo_ms <= 0:
+        return
+
+    intervalo_s = intervalo_ms / 1000.0
+    with _rate_lock:
+        agora = time.monotonic()
+        espera = _next_allowed_call_ts - agora
+        if espera > 0:
+            time.sleep(espera)
+            agora = time.monotonic()
+        _next_allowed_call_ts = agora + intervalo_s
 
 
 def _sanitizar_erro(erro, api_key: str = "") -> str:
@@ -114,7 +153,61 @@ def _parse_coordenadas(valor: str) -> dict:
     return {"address": valor}
 
 
-def consultar(api_key: str, origem: str, destino: str) -> dict:
+def _via_here_para_intermediate(via_str: str) -> dict | None:
+    """Converte '-23.3,-46.8!passThrough=true' para Waypoint intermediario do Google."""
+    if not via_str:
+        return None
+    try:
+        coord = via_str.split("!", 1)[0]
+        lat_txt, lng_txt = coord.split(",", 1)
+        lat = float(lat_txt.strip())
+        lng = float(lng_txt.strip())
+    except (ValueError, IndexError, AttributeError):
+        return None
+
+    if not (-90 <= lat <= 90 and -180 <= lng <= 180):
+        return None
+
+    return {
+        "location": {"latLng": {"latitude": lat, "longitude": lng}},
+        "via": True,
+    }
+
+
+def _montar_intermediates(via: list[str] | None) -> list[dict]:
+    if not via:
+        return []
+
+    intermediates: list[dict] = []
+    invalidos = 0
+    for item in via:
+        wp = _via_here_para_intermediate(item)
+        if wp:
+            intermediates.append(wp)
+        else:
+            invalidos += 1
+
+    if invalidos:
+        logger.warning("Google Routes: %s waypoint(s) 'via' invalido(s) foram ignorados", invalidos)
+
+    limite = _ler_int_env(
+        "GOOGLE_ROUTES_MAX_INTERMEDIATES",
+        _GOOGLE_MAX_INTERMEDIATES_DEFAULT,
+        minimo=0,
+        maximo=_GOOGLE_MAX_INTERMEDIATES_API,
+    )
+    if len(intermediates) > limite:
+        logger.info(
+            "Google Routes: truncando intermediates de %s para %s (limite configurado)",
+            len(intermediates),
+            limite,
+        )
+        return intermediates[:limite]
+
+    return intermediates
+
+
+def consultar(api_key: str, origem: str, destino: str, via: list[str] | None = None) -> dict:
     """Consulta tempo de rota via Google Routes API v2.
 
     Returns:
@@ -141,6 +234,9 @@ def consultar(api_key: str, origem: str, destino: str) -> dict:
         return resultado
 
     try:
+        _throttle_google_requests()
+        intermediates = _montar_intermediates(via)
+
         body = {
             "origin": _parse_coordenadas(origem),
             "destination": _parse_coordenadas(destino),
@@ -154,6 +250,8 @@ def consultar(api_key: str, origem: str, destino: str) -> dict:
             ).strftime("%Y-%m-%dT%H:%M:%SZ"),
             "extraComputations": ["TRAFFIC_ON_POLYLINE"],
         }
+        if intermediates:
+            body["intermediates"] = intermediates
 
         field_mask = (
             "routes.duration,"
@@ -234,7 +332,7 @@ def consultar(api_key: str, origem: str, destino: str) -> dict:
         logger.info(
             f"Google Routes: {status} | {dur_transito_min}min "
             f"(normal: {dur_normal_min}min, atraso: {atraso_min}min, "
-            f"distância: {distancia_km}km)"
+            f"distancia: {distancia_km}km, intermediates: {len(intermediates)})"
         )
 
     except requests.exceptions.RequestException as e:
