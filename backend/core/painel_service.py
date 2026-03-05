@@ -36,24 +36,34 @@ def converter_para_resumo_painel(rota_corp: dict, resultado_detalhado: dict) -> 
 
     incidente_dict = resultado_detalhado.get("incidente_principal") or {}
     jam_max = resultado_detalhado.get("jam_factor_max", 0) or 0
-    atraso_min = resultado_detalhado.get("atraso_min", 0)
+    atraso_min_raw = resultado_detalhado.get("atraso_min", 0)
+    try:
+        atraso_min = int(atraso_min_raw)
+    except (ValueError, TypeError):
+        atraso_min = 0
 
     ocorrencia = inferir_ocorrencia(
         incidente_dict if incidente_dict else None,
         float(jam_max),
-        int(atraso_min),
+        atraso_min,
     )
-    status = aplicar_override_ocorrencia(status_base, ocorrencia, float(jam_max), int(atraso_min))
+    status = aplicar_override_ocorrencia(status_base, ocorrencia, float(jam_max), atraso_min)
+
+    def _safe_int(val, default=0):
+        try:
+            return int(val)
+        except (ValueError, TypeError):
+            return default
 
     relato = gerar_observacao(
         inc=incidente_dict if incidente_dict else None,
-        atraso_min=int(atraso_min),
-        dur_normal=int(resultado_detalhado.get("duracao_normal_min", 0)),
-        dur_transito=int(resultado_detalhado.get("duracao_transito_min", 0)),
-        pct_cong=float(resultado_detalhado.get("pct_congestionado", 0)),
-        jam_avg=float(resultado_detalhado.get("jam_factor_avg", 0)),
-        vel_atual=float(resultado_detalhado.get("velocidade_atual_kmh", 0)),
-        vel_livre=float(resultado_detalhado.get("velocidade_livre_kmh", 0)),
+        atraso_min=atraso_min,
+        dur_normal=_safe_int(resultado_detalhado.get("duracao_normal_min", 0)),
+        dur_transito=_safe_int(resultado_detalhado.get("duracao_transito_min", 0)),
+        pct_cong=float(resultado_detalhado.get("pct_congestionado", 0) or 0),
+        jam_avg=float(resultado_detalhado.get("jam_factor_avg", 0) or 0),
+        vel_atual=float(resultado_detalhado.get("velocidade_atual_kmh", 0) or 0),
+        vel_livre=float(resultado_detalhado.get("velocidade_livre_kmh", 0) or 0),
         sigla=sigla,
         hub_origem=hub_o,
         hub_destino=hub_d,
@@ -157,6 +167,12 @@ async def obter_painel_agregado(config: dict) -> dict:
                 hora_atualizacao = snap.get("ts_iso", "")
                 confianca_pct = snap.get("confianca_pct", 0)
                 atraso_min = snap.get("atraso_min", 0)
+                try:
+                    _atr = int(atraso_min) if atraso_min is not None else 0
+                except (ValueError, TypeError):
+                    _atr = 0
+                if _atr < 20 and status in ("Moderado", "Intenso"):
+                    status = "Normal"
             else:
                 status = "N/A"
                 ocorrencia = ""

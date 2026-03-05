@@ -115,7 +115,7 @@ def consultar(
         futures = {}
         if google_key:
             futures["google"] = pool.submit(
-                google_traffic.consultar, google_key, origem, destino
+                google_traffic.consultar, google_key, origem, destino, via
             )
         if here_key:
             futures["here"] = pool.submit(
@@ -141,12 +141,16 @@ def consultar(
     g_status = google_result.get("status", "Sem dados") if google_ok else "Sem dados"
     h_status = here_result.get("status_here", "Sem dados") if here_ok else "Sem dados"
 
-    status_merged = status.status_final(g_status, h_status)
-
-    # Métricas principais — prefere Google para duração/distância
+    # Métricas principais — prefere Google para duração/distância (extrair antes do merge para regra atraso<20)
     atraso_min = int(google_result.get("atraso_min", 0)) if google_ok else 0
     dur_normal = int(google_result.get("duracao_normal_min", 0)) if google_ok else 0
     dur_transito = int(google_result.get("duracao_transito_min", 0)) if google_ok else 0
+
+    status_merged = status.status_final(g_status, h_status)
+    # Regra: atraso < 20 min → Normal (prioridade sobre HERE jam_factor em segmentos isolados)
+    if atraso_min < 20 and status_merged in ("Moderado", "Intenso"):
+        status_merged = "Normal"
+
     distancia_km = float(google_result.get("distancia_km", 0.0)) if google_ok else 0.0
     razao = float(google_result.get("razao_transito", 0.0)) if google_ok else 0.0
 
