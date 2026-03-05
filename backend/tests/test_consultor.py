@@ -61,3 +61,34 @@ def test_consultar_repassa_rodovia_logica_e_nao_reutiliza_cache_incorreto(monkey
     assert chamadas == [("BR-116",), ("BR-101",)]
     assert segundo["cache_hit"] is True
     assert terceiro["cache_hit"] is False
+
+
+def test_consultar_repassa_via_para_google(monkeypatch):
+    cache = _FakeCache()
+    capturado = {}
+
+    monkeypatch.setattr(consultor, "get_cache", lambda ttl: cache)
+    monkeypatch.setattr(consultor.google_traffic, "resolver_api_key", lambda config: "google-key")
+    monkeypatch.setattr(consultor.here_incidents, "resolver_api_key", lambda config: "")
+    monkeypatch.setattr(consultor, "label_para_exibicao", lambda api_key, valor: valor)
+
+    def fake_google(api_key, origem, destino, via=None):
+        capturado["via"] = via
+        return {
+            "status": "Normal",
+            "atraso_min": 5,
+            "duracao_normal_min": 60,
+            "duracao_transito_min": 65,
+            "distancia_km": 100.0,
+            "razao_transito": 1.08,
+            "traffic_flow_pts": [],
+            "erro": "",
+        }
+
+    monkeypatch.setattr(consultor.google_traffic, "consultar", fake_google)
+
+    via = ["-23.333027,-46.823893!passThrough=true", "-22.0,-45.0!passThrough=true"]
+    resultado = consultor.consultar({}, "Origem", "Destino", via=via)
+
+    assert capturado["via"] == via
+    assert resultado["status_google"] == "Normal"
