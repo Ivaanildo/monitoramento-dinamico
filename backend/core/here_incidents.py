@@ -12,6 +12,7 @@ import math
 import os
 import re
 import threading
+import time
 import urllib.parse
 import unicodedata
 from concurrent.futures import ThreadPoolExecutor
@@ -54,6 +55,9 @@ def _sanitizar_erro(erro, api_key: str = "") -> str:
     msg = str(erro)
     if api_key:
         msg = msg.replace(api_key, "***")
+        encoded = urllib.parse.quote(api_key, safe="")
+        if encoded != api_key:
+            msg = msg.replace(encoded, "***")
     return msg
 
 
@@ -112,8 +116,54 @@ _SEVERIDADE_TO_CODE = {
 def _mapear_severidade(severidade: str) -> str:
     return _SEVERIDADE_TO_CODE.get(severidade, "minor")
 
-_MAX_VIA_PER_CHUNK = 23  # conservador — limite HERE ~25
+_HERE_MAX_VIA_API_LIMIT = 250
+_HERE_MAX_VIA_PER_CHUNK_DEFAULT = 80
+_HERE_MIN_INTERVAL_MS_DEFAULT = 120
+_here_rate_lock = threading.Lock()
+_next_here_call_ts = 0.0
 _MAX_CORRIDOR_KM = 450.0  # HERE limita corredor a 500km; usamos 450km como margem
+
+
+def _ler_int_env(nome: str, padrao: int, *, minimo: int, maximo: int | None = None) -> int:
+    try:
+        valor = int(os.getenv(nome, str(padrao)).strip())
+    except (ValueError, AttributeError):
+        valor = padrao
+    if valor < minimo:
+        valor = minimo
+    if maximo is not None and valor > maximo:
+        valor = maximo
+    return valor
+
+
+def _max_via_per_chunk() -> int:
+    return _ler_int_env(
+        "HERE_ROUTING_MAX_VIA_PER_CHUNK",
+        _HERE_MAX_VIA_PER_CHUNK_DEFAULT,
+        minimo=1,
+        maximo=_HERE_MAX_VIA_API_LIMIT,
+    )
+
+
+def _throttle_here_requests() -> None:
+    global _next_here_call_ts
+
+    intervalo_ms = _ler_int_env(
+        "HERE_MIN_INTERVAL_MS",
+        _HERE_MIN_INTERVAL_MS_DEFAULT,
+        minimo=0,
+    )
+    if intervalo_ms <= 0:
+        return
+
+    intervalo_s = intervalo_ms / 1000.0
+    with _here_rate_lock:
+        agora = time.monotonic()
+        espera = _next_here_call_ts - agora
+        if espera > 0:
+            time.sleep(espera)
+            agora = time.monotonic()
+        _next_here_call_ts = agora + intervalo_s
 
 
 def _coords_from_via_str(via_str: str) -> tuple[float, float] | None:
@@ -311,6 +361,7 @@ def _geocode_endereco(api_key: str, endereco: str):
     """Geocodifica um endereço via HERE Geocoding API. Retorna (lat, lng) ou None."""
     try:
         consulta = endereco if "brasil" in endereco.lower() else f"{endereco}, Brasil"
+        _throttle_here_requests()
         resp = _get_sessao().get(
             "https://geocode.search.hereapi.com/v1/geocode",
             params={
@@ -355,6 +406,7 @@ def _reverse_geocode(api_key: str, lat: float, lng: float) -> str | None:
         if chave in _revgeocode_cache:
             return _revgeocode_cache[chave]
     try:
+        _throttle_here_requests()
         resp = _get_sessao().get(
             "https://revgeocode.search.hereapi.com/v1/revgeocode",
             params={
@@ -461,6 +513,7 @@ def _single_routing_call(api_key: str, origin: str, destination: str,
             url += "&via=" + v
 
     try:
+        _throttle_here_requests()
         resp = _get_sessao().get(url, timeout=20)
         resp.raise_for_status()
     except requests.exceptions.HTTPError as e:
@@ -496,7 +549,7 @@ def _single_routing_call(api_key: str, origin: str, destination: str,
 def _call_routing_chunks(api_key: str, lat1: float, lng1: float,
                           lat2: float, lng2: float,
                           via: list[str] | None = None) -> list:
-    """Chama HERE Routing v8, dividindo em chunks se via > _MAX_VIA_PER_CHUNK.
+    """Chama HERE Routing v8, dividindo em chunks quando excede o limite.
 
     Cada chunk usa o último waypoint da fatia anterior como origin do próximo.
     Concatena polylines removendo ponto duplicado na costura.
@@ -504,15 +557,16 @@ def _call_routing_chunks(api_key: str, lat1: float, lng1: float,
     origin = f"{lat1},{lng1}"
     destination = f"{lat2},{lng2}"
 
-    if not via or len(via) <= _MAX_VIA_PER_CHUNK:
+    max_via_por_chunk = _max_via_per_chunk()
+    if not via or len(via) <= max_via_por_chunk:
         return _single_routing_call(api_key, origin, destination, via)
 
-    # Dividir via em fatias de _MAX_VIA_PER_CHUNK
+    # Dividir via em fatias de max_via_por_chunk
     all_pts = []
     chunk_origin = origin
-    for i in range(0, len(via), _MAX_VIA_PER_CHUNK):
-        chunk_via = via[i:i + _MAX_VIA_PER_CHUNK]
-        is_last = (i + _MAX_VIA_PER_CHUNK) >= len(via)
+    for i in range(0, len(via), max_via_por_chunk):
+        chunk_via = via[i:i + max_via_por_chunk]
+        is_last = (i + max_via_por_chunk) >= len(via)
         if is_last:
             chunk_dest = destination
         else:
@@ -529,7 +583,7 @@ def _call_routing_chunks(api_key: str, lat1: float, lng1: float,
             chunk_via if chunk_via else None,
         )
         if not pts:
-            logger.warning(f"HERE Routing chunk {i // _MAX_VIA_PER_CHUNK + 1} falhou")
+            logger.warning(f"HERE Routing chunk {i // max_via_por_chunk + 1} falhou")
             return []
 
         if all_pts:
@@ -540,7 +594,7 @@ def _call_routing_chunks(api_key: str, lat1: float, lng1: float,
 
         chunk_origin = chunk_dest
         logger.info(
-            f"HERE Routing chunk {i // _MAX_VIA_PER_CHUNK + 1}: "
+            f"HERE Routing chunk {i // max_via_por_chunk + 1}: "
             f"{len(pts)} pts (via={len(chunk_via)})"
         )
 
@@ -849,6 +903,7 @@ def _consultar_incidents_zones(api_key: str, zones: list[str]) -> list:
 
     for zone in zones:
         try:
+            _throttle_here_requests()
             resp = _get_sessao().get(
                 "https://data.traffic.hereapi.com/v7/incidents",
                 params={
@@ -887,6 +942,7 @@ def _consultar_flow_zones(api_key: str, zones: list[str]) -> list:
     flow_results: list = []
     for zone in zones:
         try:
+            _throttle_here_requests()
             resp = _get_sessao().get(
                 "https://data.traffic.hereapi.com/v7/flow",
                 params={
