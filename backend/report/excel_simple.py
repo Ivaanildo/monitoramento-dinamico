@@ -48,6 +48,10 @@ CORES = {
     "media_font":          "7D6608",
     "baixa_bg":            "FADBD8",
     "baixa_font":          "922B21",
+    "clima_bg":            "DBEAFE",
+    "clima_font":          "1E40AF",
+    "sem_ocorrencia_bg":   "F3F4F6",
+    "sem_ocorrencia_font": "6B7280",
 }
 
 HEADER_FILL  = PatternFill("solid", fgColor=CORES["header_bg"])
@@ -77,12 +81,14 @@ _STYLE_MAP = {
         "parado":   ("parado_bg",           "parado_font"),
     },
     "ocorrencia": {
-        "colisao":          ("acidente_bg",        "acidente_font"),
-        "acidente":         ("acidente_bg",        "acidente_font"),
-        "bloqueio parcial": ("bloqueio_parcial_bg","bloqueio_parcial_font"),
-        "interdicao":       ("interdicao_bg",      "interdicao_font"),
-        "obras na pista":   ("moderado_bg",        "moderado_font"),
-        "engarrafamento":   ("intenso_bg",         "intenso_font"),
+        "colisao":           ("acidente_bg",        "acidente_font"),
+        "acidente":          ("acidente_bg",        "acidente_font"),
+        "bloqueio parcial":  ("bloqueio_parcial_bg","bloqueio_parcial_font"),
+        "interdicao":        ("interdicao_bg",      "interdicao_font"),
+        "obras na pista":    ("moderado_bg",        "moderado_font"),
+        "engarrafamento":    ("intenso_bg",         "intenso_font"),
+        "condicao climatica":("clima_bg",           "clima_font"),
+        "sem ocorrencia":    ("sem_ocorrencia_bg",  "sem_ocorrencia_font"),
     },
     "confianca": {
         "alta":  ("alta_bg",  "alta_font"),
@@ -116,7 +122,7 @@ def _get_style(categoria: str, valor: str):
     return None, None
 
 
-def _texto_curto(texto, limite=170) -> str:
+def _texto_curto(texto, limite=320) -> str:
     valor = " ".join(str(texto or "").split())
     if len(valor) <= limite:
         return valor
