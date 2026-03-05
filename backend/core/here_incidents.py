@@ -1073,9 +1073,9 @@ def consultar(
 
                 if road_closed or jam_max >= 10:
                     status_here = "Parado"
-                elif jam_max >= 8 and pct_cong >= 15.0:
+                elif jam_max >= 8:
                     status_here = "Intenso"
-                elif jam_max >= 5 or avg_jam >= 5 or jam_max >= 8:
+                elif jam_max >= 5 or avg_jam >= 5:
                     status_here = "Moderado"
                 else:
                     status_here = "Normal"
