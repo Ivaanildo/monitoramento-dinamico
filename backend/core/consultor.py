@@ -147,8 +147,9 @@ def consultar(
     dur_transito = int(google_result.get("duracao_transito_min", 0)) if google_ok else 0
 
     status_merged = status.status_final(g_status, h_status)
-    # Regra: atraso < 20 min → Normal (prioridade sobre HERE jam_factor em segmentos isolados)
-    if atraso_min < 20 and status_merged in ("Moderado", "Intenso"):
+    # Regra: atraso medido pelo Google < 20 min → Normal (suprime falso positivo do HERE em segmentos isolados)
+    # Guarda google_ok: evita forçar Normal quando Google falhou e atraso_min defaultou para 0
+    if google_ok and 0 <= atraso_min < 20 and status_merged in ("Moderado", "Intenso"):
         status_merged = "Normal"
 
     distancia_km = float(google_result.get("distancia_km", 0.0)) if google_ok else 0.0

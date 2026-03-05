@@ -172,7 +172,8 @@ async def obter_painel_agregado(config: dict) -> dict:
                     _atr = int(atraso_min) if atraso_min is not None else 0
                 except (ValueError, TypeError):
                     _atr = 0
-                if _atr < 20 and status in ("Moderado", "Intenso"):
+                # Guarda _atr > 0: evita forçar Normal quando Google não retornou dado naquele ciclo
+                if 0 < _atr < 20 and status in ("Moderado", "Intenso"):
                     status = "Normal"
             else:
                 status = "N/A"
