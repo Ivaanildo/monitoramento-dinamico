@@ -102,17 +102,25 @@ def gerar_observacao(
     """Sintetiza texto operacional de observação para exibição no painel e Excel."""
     via = sigla or "trecho monitorado"
 
-    if atraso_min > 0:
+    # Atraso relevante (>20 min = Moderado ou Intenso)
+    if atraso_min > 20:
         categoria = ""
         if inc:
             categoria = inc.get("categoria", "")
         if not categoria:
             categoria = "Engarrafamento"
         return (
-            f"{categoria} (Google Maps) em {via}: "
+            f"{categoria} em {via}: "
             f"Atraso {atraso_min} min | "
-            f"Atraso estimado: {atraso_min} min | "
-            f"Google: lentidao no trecho inicial"
+            f"Duracao normal: {dur_normal} min, atual: {dur_transito} min"
+        )
+
+    # Atraso leve (1-20 min = status Normal, só informativo)
+    if atraso_min > 0:
+        return (
+            f"Via {via}: transito levemente acima do normal "
+            f"(+{atraso_min} min). "
+            f"Duracao normal: {dur_normal} min, atual: {dur_transito} min"
         )
 
     # Sem atraso mas com incidente HERE (ex: obras noturnas sem impacto ainda)

@@ -172,8 +172,9 @@ class TestGerarObservacao:
             pct_cong=20, jam_avg=6, vel_atual=40, vel_livre=80,
             sigla="BR-116", hub_origem="SP", hub_destino="RJ",
         )
-        assert "Colisão (Google Maps) em BR-116" in obs
+        assert "Colisão em BR-116" in obs
         assert "Atraso 25 min" in obs
+        assert "Duracao normal:" in obs
 
     def test_sem_incidente_com_atraso(self):
         obs = gerar_observacao(
@@ -181,8 +182,8 @@ class TestGerarObservacao:
             pct_cong=5, jam_avg=3, vel_atual=50, vel_livre=80,
             sigla="BR-381",
         )
-        assert "Engarrafamento (Google Maps) em BR-381" in obs
-        assert "Atraso 10 min" in obs
+        assert "transito levemente acima do normal (+10 min)" in obs
+        assert "Duracao normal: 60 min, atual: 70 min" in obs
 
     def test_fluxo_livre_com_hubs(self):
         obs = gerar_observacao(
