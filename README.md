@@ -100,34 +100,5 @@ Variaveis esperadas:
 - `AUTH_LOCAL_SESSION_SECRET`
 - `AUTH_COOKIE_SECURE`
 
-## Dados Publicos Versionados
 
-Os arquivos abaixo sao mantidos intencionalmente no repositório publico:
 
-- `backend/data/rotas.json`
-- `backend/data/favoritos.json`
-
-Eles representam a base publica/operacional assumida para este projeto.
-
-## GitHub Actions — Comportamento de Commit
-
-> **Atencao:** um run do GitHub Actions usa o commit que estava no topo da branch **no momento em que o run foi disparado** (schedule ou `workflow_dispatch`), nao necessariamente o commit mais recente.
->
-> Se voce fizer push de um novo commit e acionar o workflow antes que o GitHub processe o push, o run ainda ira executar o commit anterior.
->
-> **Regra pratica:** apos um push, espere a aba **Actions** mostrar o SHA correto no cabecalho do run antes de interpretar os logs. Para forcar o commit mais recente, acione **Run workflow** manualmente *depois* de confirmar que o push foi recebido pelo GitHub.
-
-## Fluxo Git Recomendado
-
-1. Criar branch a partir de `main`.
-2. Fazer mudancas pequenas e coerentes.
-3. Validar localmente backend/frontend antes de abrir PR.
-4. Commitar com mensagem objetiva e escopo claro.
-5. Subir para o remote (`git push`) e aguardar confirmacao no GitHub.
-6. Acionar o workflow manualmente somente apos o push estar visivel no repositorio remoto.
-
-## Proximos Passos Naturais
-
-- Configurar o remote do GitHub e publicar a branch `main`.
-- Validar o workflow em `.github/workflows/monitor_dinamico.yml`.
-- Fazer o cutover de deploy com backend publico + frontend via Vercel.
