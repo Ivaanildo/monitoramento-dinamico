@@ -13,7 +13,7 @@ import requests
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
-from core.polyline import decode_google_polyline
+from core.polyline import decode_google_polyline, midpoint_by_distance
 from core.status import classificar_transito
 
 logger = logging.getLogger(__name__)
@@ -134,8 +134,7 @@ def _traffic_to_flow_pts(polyline_enc: str, intervals: list) -> list:
         end = max(start + 1, min(end, len(pts)))
         seg = pts[start:end]
         if seg:
-            lat_c = sum(p[0] for p in seg) / len(seg)
-            lng_c = sum(p[1] for p in seg) / len(seg)
+            lat_c, lng_c = midpoint_by_distance(seg)
             flow.append({"lat": round(lat_c, 5), "lng": round(lng_c, 5), "jam": jam})
     return flow[:400]
 

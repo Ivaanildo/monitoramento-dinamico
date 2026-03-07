@@ -26,6 +26,7 @@ from core.polyline import (
     decode_polyline,
     downsample_polyline,
     encode_corridor,
+    midpoint_by_distance,
     pts_to_geojson_line,
 )
 
@@ -681,7 +682,7 @@ def _gerar_bboxes_fallback(lat1: float, lng1: float, lat2: float, lng2: float,
         return [_formatar_bbox(west, south, east, north)]
 
     half = padding_km * 0.009
-    passo = half * 1.8
+    passo = max(half * 1.8, 0.001)  # evita divisão por zero
     span_total = max(span_lat, span_lng)
     n_boxes = min(max_boxes, max(2, int(math.ceil(span_total / passo)) + 1))
 
@@ -1120,8 +1121,8 @@ def consultar(
                 for lk in (location.get("shape", {}).get("links", []) or []):
                     seg_pts.extend(lk.get("points", []))
                 if seg_pts:
-                    lat_c = sum(p.get("lat", 0) for p in seg_pts) / len(seg_pts)
-                    lng_c = sum(p.get("lng", 0) for p in seg_pts) / len(seg_pts)
+                    tuples = [(p.get("lat", 0), p.get("lng", 0)) for p in seg_pts]
+                    lat_c, lng_c = midpoint_by_distance(tuples)
                     flow_vis.append({
                         "lat": round(lat_c, 5),
                         "lng": round(lng_c, 5),

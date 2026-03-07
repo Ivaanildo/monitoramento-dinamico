@@ -4,9 +4,19 @@ Lê e normaliza o arquivo `rota_logistica.json` legando para uso no `projeto_zer
 """
 import json
 import logging
+import time
 from pathlib import Path
 
 logger = logging.getLogger(__name__)
+
+_cache: dict = {"path": None, "data": [], "ts": 0.0}
+_CACHE_TTL = 60
+
+
+def _clear_cache():
+    global _cache
+    _cache = {"path": None, "data": [], "ts": 0.0}
+
 
 def carregar_rotas(config: dict) -> list[dict]:
     """Carrega e normaliza as 20 rotas corporativas.
@@ -20,6 +30,11 @@ def carregar_rotas(config: dict) -> list[dict]:
     # Resolver caminho relativo à raiz do projeto
     if not p.is_absolute():
         p = Path(config.get("__config_path", Path(__file__).parent.parent / "config.yaml")).parent / caminho
+
+    resolved = str(p)
+    now = time.monotonic()
+    if _cache["path"] == resolved and (now - _cache["ts"]) < _CACHE_TTL:
+        return [r.copy() for r in _cache["data"]]
 
     if not p.exists():
         logger.error(f"Arquivo corporativo não encontrado: {p}")
@@ -73,6 +88,7 @@ def carregar_rotas(config: dict) -> list[dict]:
         }
         rotas_normalizadas.append(rota_norm)
 
+    _cache.update({"path": resolved, "data": rotas_normalizadas, "ts": now})
     return rotas_normalizadas
 
 

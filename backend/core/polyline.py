@@ -56,6 +56,31 @@ def haversine(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
     return R * 2 * math.asin(math.sqrt(a))
 
 
+def midpoint_by_distance(pts: list[tuple[float, float]]) -> tuple[float, float]:
+    """Retorna o ponto no meio da distância acumulada da polyline."""
+    if not pts:
+        return (0.0, 0.0)
+    if len(pts) == 1:
+        return (pts[0][0], pts[0][1])
+    cum = [0.0]
+    for i in range(1, len(pts)):
+        cum.append(cum[-1] + haversine(pts[i-1][0], pts[i-1][1], pts[i][0], pts[i][1]))
+    total = cum[-1]
+    if total == 0:
+        return (pts[0][0], pts[0][1])
+    half = total / 2.0
+    for i in range(1, len(pts)):
+        if cum[i] >= half:
+            seg_len = cum[i] - cum[i-1]
+            if seg_len == 0:
+                return (pts[i][0], pts[i][1])
+            frac = (half - cum[i-1]) / seg_len
+            lat = pts[i-1][0] + frac * (pts[i][0] - pts[i-1][0])
+            lng = pts[i-1][1] + frac * (pts[i][1] - pts[i-1][1])
+            return (lat, lng)
+    return (pts[-1][0], pts[-1][1])
+
+
 # ===== RDP Downsampling (portado de here_traffic.py) =====
 
 def rdp_simplify(pontos: list, epsilon_m: float) -> list:
