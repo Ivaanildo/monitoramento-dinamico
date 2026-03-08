@@ -49,11 +49,12 @@ def converter_para_resumo_painel(rota_corp: dict, resultado_detalhado: dict) -> 
     except (ValueError, TypeError):
         atraso_min = 0
 
-    ocorrencia = inferir_ocorrencia(
-        incidente_dict if incidente_dict else None,
-        float(jam_max),
-        atraso_min,
+    inc_para_override = (
+        incidente_dict
+        if incidente_dict and incidente_dict.get("match_tipo", "compatível") == "compatível"
+        else None
     )
+    ocorrencia = inferir_ocorrencia(inc_para_override, float(jam_max), atraso_min)
     status = aplicar_override_ocorrencia(status_base, ocorrencia, float(jam_max), atraso_min)
 
     relato = gerar_observacao(

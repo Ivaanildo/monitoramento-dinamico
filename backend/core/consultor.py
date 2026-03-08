@@ -188,7 +188,9 @@ def consultar(
     # Regra: atraso medido pelo Google < 20 min → Normal (suprime falso positivo do HERE)
     # Isenção: incidentes graves (Interdição, Colisão etc.) mantêm status mesmo com atraso baixo
     tem_incidente_grave = any(
-        inc.get("categoria") in status.CATEGORIAS_GRAVES for inc in incidentes
+        inc.get("categoria") in status.CATEGORIAS_GRAVES
+        and inc.get("match_tipo", "compatível") == "compatível"
+        for inc in incidentes
     )
     if google_ok and 0 <= atraso_min < 20 and status_merged in ("Moderado", "Intenso"):
         if not tem_incidente_grave:

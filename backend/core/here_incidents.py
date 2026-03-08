@@ -796,10 +796,26 @@ def _filtrar_relevancia_rodovia(
     # No modo corridor (200m de raio), a proximidade geométrica já garante
     # relevância — pular filtro por código de rodovia, manter só via urbana.
     if metodo_busca == "corridor":
-        filtrados = [inc for inc in incidentes if not _e_via_urbana(inc)]
-        n_desc = len(incidentes) - len(filtrados)
-        if n_desc:
-            logger.info(f"Filtro rodovia (corridor): {n_desc} vias urbanas descartadas, {len(filtrados)} mantidos")
+        filtrados = []
+        descartados = {"via_urbana": 0, "rodovia_divergente": 0}
+        for inc in incidentes:
+            if _e_via_urbana(inc):
+                descartados["via_urbana"] += 1
+                continue
+            _relevante, motivo = _incidente_relevante_para_rodovia(inc, codigos_rota)
+            if motivo == "rodovia_divergente":
+                descartados["rodovia_divergente"] += 1
+                continue
+            inc["match_tipo"] = motivo  # "compatível" ou "sem_codigo"
+            filtrados.append(inc)
+        total = sum(descartados.values())
+        if total:
+            logger.info(
+                f"Filtro rodovia (corridor): {total} descartados "
+                f"(urbana={descartados['via_urbana']}, "
+                f"divergente={descartados['rodovia_divergente']}), "
+                f"{len(filtrados)} mantidos"
+            )
         return filtrados
 
     filtrados: list = []
@@ -807,6 +823,7 @@ def _filtrar_relevancia_rodovia(
     for inc in incidentes:
         relevante, motivo = _incidente_relevante_para_rodovia(inc, codigos_rota)
         if relevante:
+            inc["match_tipo"] = motivo  # "compatível" (único possível no bbox)
             filtrados.append(inc)
         elif motivo in descartados:
             descartados[motivo] += 1
@@ -1119,7 +1136,11 @@ def consultar(
         if flow_results:
             total_speed = total_free = total_jam = count = 0
             jam_por_seg: list = []
-            road_closed = any(inc.get("road_closed") for inc in incidentes)
+            road_closed = any(
+                inc.get("road_closed")
+                for inc in incidentes
+                if inc.get("match_tipo", "compatível") == "compatível"
+            )
             flow_vis: list = []
 
             for r in flow_results:
