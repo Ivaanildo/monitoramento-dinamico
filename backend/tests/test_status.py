@@ -113,10 +113,10 @@ class TestCalcularConfianca:
 # ── aplicar_override_ocorrencia ───────────────────────────────────────────────
 
 class TestAplicarOverrideOcorrencia:
-    def test_interdicao_eleva_para_parado(self):
-        assert aplicar_override_ocorrencia("Normal", "Interdição") == "Parado"
+    def test_interdicao_eleva_para_intenso(self):
+        assert aplicar_override_ocorrencia("Normal", "Interdição") == "Intenso"
 
-    def test_interdicao_mantem_parado(self):
+    def test_interdicao_mantem_parado_se_ja_parado(self):
         assert aplicar_override_ocorrencia("Parado", "Interdição") == "Parado"
 
     def test_colisao_eleva_para_intenso(self):

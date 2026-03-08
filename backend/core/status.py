@@ -207,7 +207,7 @@ def aplicar_override_ocorrencia(status_base: str, ocorrencia_tipo: str,
                                  jam_max: float = 0, atraso_min: int = 0) -> str:
     """Eleva status conforme o tipo de ocorrência detectada."""
     if ocorrencia_tipo == "Interdição":
-        return mais_severo(status_base, "Parado")
+        return mais_severo(status_base, "Intenso")
     if ocorrencia_tipo in ("Colisão", "Acidente"):
         return mais_severo(status_base, "Intenso")
     if ocorrencia_tipo == "Bloqueio Parcial":
