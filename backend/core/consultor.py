@@ -163,6 +163,7 @@ def consultar(
     pct_cong = float(here_result.get("pct_congestionado", 0.0)) if here_ok else 0.0
     incidentes = here_result.get("incidentes", []) if here_ok else []
     route_pts = here_result.get("route_pts", []) if here_has_route else []
+    display_pts = here_result.get("display_pts", []) if here_has_route else []
     route_geojson = here_result.get("route_geojson") if here_has_route else None
     flow_pts = here_result.get("flow_pts", []) if here_ok else []
     flow_fonte = "here" if flow_pts and here_ok else ""
@@ -170,6 +171,19 @@ def consultar(
     if not flow_pts and google_ok:
         flow_pts = google_result.get("traffic_flow_pts", []) or []
         flow_fonte = "google" if flow_pts else ""
+    # Fallback: polyline do Google para display quando HERE Routing falha
+    if not display_pts and google_ok:
+        google_poly_enc = google_result.get("polyline_enc", "")
+        if google_poly_enc:
+            from core.polyline import decode_google_polyline, downsample_polyline
+            google_decoded = decode_google_polyline(google_poly_enc)
+            if google_decoded:
+                display_pts = downsample_polyline(google_decoded, max_pts=1500)
+                if not route_pts:
+                    route_pts = display_pts
+                if not route_geojson:
+                    from core.polyline import pts_to_geojson_line
+                    route_geojson = pts_to_geojson_line(display_pts)
     metodo_busca = here_result.get("metodo_busca", "bbox") if here_has_route else "bbox"
 
     # Incidente principal (mais grave) — retorna dict ou None
@@ -180,6 +194,9 @@ def consultar(
         inc_principal,
         atraso_min, dur_normal, dur_transito,
         pct_cong, jam_avg, vel_atual, vel_livre,
+        incidentes=incidentes,
+        status_google=g_status,
+        status_here=h_status,
     )
 
     # Confiança
@@ -234,6 +251,7 @@ def consultar(
         "link_waze": link_waze,
         "link_gmaps": link_gmaps,
         "route_pts": route_pts,
+        "display_pts": display_pts,
         "route_geojson": route_geojson,
         "flow_pts": flow_pts,
         "flow_fonte": flow_fonte,

@@ -325,6 +325,7 @@ def consultar(api_key: str, origem: str, destino: str, via: list[str] | None = N
             "route_token": route.get("routeToken", "") or "",
             "traffic_on_polyline": intervals,
             "traffic_flow_pts": traffic_flow_pts,
+            "polyline_enc": polyline_enc,
             "erro": "",
         })
 

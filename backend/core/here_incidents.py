@@ -604,10 +604,10 @@ def _call_routing_chunks(api_key: str, lat1: float, lng1: float,
 
 def _obter_polyline_rota(api_key: str, lat1: float, lng1: float,
                           lat2: float, lng2: float,
-                          via: list[str] | None = None) -> list:
+                          via: list[str] | None = None) -> dict:
     """Chama HERE Routing v8 para obter a polyline real da rota.
 
-    Retorna lista de tuplas (lat, lng) ou [] se falhar.
+    Retorna dict com 'corridor_pts' (≤300) e 'display_pts' (≤1500), ou {} se falhar.
     Resultado cacheado por (lat1, lng1, lat2, lng2, via) para reutilização.
     """
     via_key = tuple(via) if via else ()
@@ -619,23 +619,24 @@ def _obter_polyline_rota(api_key: str, lat1: float, lng1: float,
     try:
         all_pts = _call_routing_chunks(api_key, lat1, lng1, lat2, lng2, via)
         if not all_pts:
-            return []
+            return {}
 
-        # RDP downsampling para ≤300 pontos (limite HERE corridor)
-        simplified = downsample_polyline(all_pts, max_pts=300)
+        corridor_pts = downsample_polyline(all_pts, max_pts=300)
+        display_pts = downsample_polyline(all_pts, max_pts=1500)
         logger.info(
             f"HERE Routing v8: {len(all_pts)} pts brutos → "
-            f"{len(simplified)} pts simplificados"
+            f"{len(corridor_pts)} corridor / {len(display_pts)} display"
             f"{f' (via={len(via)} waypoints)' if via else ''}"
         )
 
+        result = {"corridor_pts": corridor_pts, "display_pts": display_pts}
         with _routing_lock:
-            _routing_cache[cache_key] = simplified
-        return simplified
+            _routing_cache[cache_key] = result
+        return result
 
     except Exception as e:
         logger.warning(f"HERE Routing v8 falhou: {_sanitizar_erro(e, api_key)}")
-        return []
+        return {}
 
 
 # ===== BBox fallback =====
@@ -1031,7 +1032,9 @@ def consultar(
         resultado["dist_rota_km"] = round(dist_rota_km, 1)
 
         # -------- Estratégia 1: HERE Routing v8 → corridor --------
-        route_pts = _obter_polyline_rota(api_key, lat1, lng1, lat2, lng2, via=via)
+        routing_result = _obter_polyline_rota(api_key, lat1, lng1, lat2, lng2, via=via)
+        route_pts = routing_result.get("corridor_pts", [])
+        display_pts = routing_result.get("display_pts", [])
         usar_corridor = False
         zones_incidents: list[str] = []
         zones_flow: list[str] = []
@@ -1047,7 +1050,8 @@ def consultar(
                 zones_incidents = corridors_inc
                 zones_flow = corridors_flow
                 resultado["route_pts"] = route_pts
-                resultado["route_geojson"] = pts_to_geojson_line(route_pts)
+                resultado["display_pts"] = display_pts
+                resultado["route_geojson"] = pts_to_geojson_line(display_pts or route_pts)
                 resultado["metodo_busca"] = "corridor"
                 logger.info(
                     f"HERE: rota {dist_rota_km:.0f}km | {len(segmentos)} corredor(es) "

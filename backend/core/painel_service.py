@@ -68,6 +68,9 @@ def converter_para_resumo_painel(rota_corp: dict, resultado_detalhado: dict) -> 
         sigla=sigla,
         hub_origem=hub_o,
         hub_destino=hub_d,
+        incidentes=resultado_detalhado.get("incidentes", []),
+        status_google=resultado_detalhado.get("status_google", ""),
+        status_here=resultado_detalhado.get("status_here", ""),
     )
 
     hora_atualizacao = resultado_detalhado.get("consultado_em", datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S"))
@@ -172,7 +175,10 @@ async def obter_painel_agregado(config: dict) -> dict:
                     _atr = int(atraso_min) if atraso_min is not None else 0
                 except (ValueError, TypeError):
                     _atr = 0
-                # Guarda _atr > 0: evita forçar Normal quando Google não retornou dado naquele ciclo
+                # Regra de supressão: atraso medido pelo Google < 20 min → Normal.
+                # Suprime falso positivo do HERE em segmentos isolados (jam_max alto
+                # num trecho curto que não impacta a viagem total). Guarda _atr > 0
+                # para evitar forçar Normal quando Google não retornou dado naquele ciclo.
                 if 0 < _atr < 20 and status in ("Moderado", "Intenso"):
                     status = "Normal"
             else:
@@ -200,6 +206,7 @@ async def obter_painel_agregado(config: dict) -> dict:
                 "duracao_transito_min": (snap.get("duracao_transito_min") or 0) if snap else 0,
                 "jam_factor_max": (snap.get("jam_factor_max") or 0) if snap else 0,
                 "distancia_km": r.get("distance_km", 0),
+                "incidentes": [],  # incidentes não são persistidos no snapshot
                 "dados_origem": "snapshot",
             })
 

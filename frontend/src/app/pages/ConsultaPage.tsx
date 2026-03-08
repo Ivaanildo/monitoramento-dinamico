@@ -46,9 +46,11 @@ interface ConsultaData {
     jam_factor_max: number;
     confianca_pct: number;
     confianca: string;
+    relato?: string;
     incidente_principal?: { categoria: string; descricao: string; severidade?: string } | null;
-    incidentes: { lat?: number; lng?: number; tipo?: string; descricao?: string; severidade?: string; categoria?: string }[];
+    incidentes: { lat?: number; lng?: number; tipo?: string; descricao?: string; severidade?: string; categoria?: string; rodovia_afetada?: string; road_closed?: boolean }[];
     route_pts: { lat: number; lng: number }[];
+    display_pts?: { lat: number; lng: number }[];
     flow_pts?: { lat: number; lng: number; jam: number }[];
     via_coords?: { lat: number; lng: number }[];
     link_waze?: string;
@@ -499,6 +501,51 @@ export default function ConsultaPage() {
                                     </div>
                                 </div>
 
+                                {/* Status Google vs HERE */}
+                                {(data.status_google || data.status_here) && (
+                                    <div className="grid grid-cols-2 gap-2">
+                                        <div
+                                            className="p-3 rounded-lg text-center"
+                                            style={{ background: "#1e1e1e", border: "1px solid #333" }}
+                                        >
+                                            <div className="text-[10px] text-gray-500 uppercase tracking-widest mb-1">Google</div>
+                                            <div className="text-sm font-bold text-gray-200">{data.status_google || "N/A"}</div>
+                                        </div>
+                                        <div
+                                            className="p-3 rounded-lg text-center"
+                                            style={{ background: "#1e1e1e", border: "1px solid #333" }}
+                                        >
+                                            <div className="text-[10px] text-gray-500 uppercase tracking-widest mb-1">HERE</div>
+                                            <div className="text-sm font-bold text-gray-200">{data.status_here || "N/A"}</div>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Observação / Relato */}
+                                {data.relato && (
+                                    <div
+                                        className="p-3 rounded-lg"
+                                        style={{ background: "#1a1a1a", border: "1px solid #333" }}
+                                    >
+                                        <div className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">
+                                            Observação
+                                        </div>
+                                        <div className="space-y-1">
+                                            {data.relato.split('\n').map((line, i) => (
+                                                <p
+                                                    key={i}
+                                                    className={i === 0
+                                                        ? "text-sm font-semibold text-gray-200"
+                                                        : "text-xs text-gray-400"
+                                                    }
+                                                >
+                                                    {line}
+                                                </p>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+
                                 {/* Rota coords block */}
                                 <div
                                     className="p-3 rounded-xl flex flex-col gap-2"
@@ -604,7 +651,7 @@ export default function ConsultaPage() {
                                         <div className="text-xs font-bold text-gray-500 uppercase tracking-widest px-1 mb-2">
                                             Incidentes HERE ({data.incidentes.length})
                                         </div>
-                                        <div className="flex flex-col gap-1.5 max-h-40 overflow-y-auto pr-1">
+                                        <div className="flex flex-col gap-1.5 max-h-64 overflow-y-auto pr-1">
                                             {data.incidentes.map((inc, i) => (
                                                 <div
                                                     key={i}
@@ -619,12 +666,37 @@ export default function ConsultaPage() {
                                                                     inc.severidade === "major" ? "#f97316" : "#eab308",
                                                         }}
                                                     />
-                                                    <div>
-                                                        <div className="font-bold text-gray-300">
-                                                            {inc.tipo || "Incidente"}
+                                                    <div className="min-w-0 flex-1">
+                                                        <div className="flex items-center gap-1.5 flex-wrap">
+                                                            <span className="font-bold text-gray-300">
+                                                                {inc.categoria || inc.tipo || "Incidente"}
+                                                            </span>
+                                                            {inc.severidade && (
+                                                                <span
+                                                                    className="text-[10px] font-bold px-1.5 py-px rounded"
+                                                                    style={{
+                                                                        backgroundColor:
+                                                                            inc.severidade === "critical" ? "#fef2f2" :
+                                                                            inc.severidade === "major" ? "#fff7ed" : "#fefce8",
+                                                                        color:
+                                                                            inc.severidade === "critical" ? "#b91c1c" :
+                                                                            inc.severidade === "major" ? "#c2410c" : "#a16207",
+                                                                    }}
+                                                                >
+                                                                    {inc.severidade}
+                                                                </span>
+                                                            )}
+                                                            {inc.road_closed && (
+                                                                <span className="text-[10px] font-bold px-1.5 py-px rounded bg-red-900/40 text-red-400">
+                                                                    FECHADA
+                                                                </span>
+                                                            )}
                                                         </div>
                                                         {inc.descricao && (
                                                             <div className="text-gray-500 mt-0.5">{inc.descricao}</div>
+                                                        )}
+                                                        {inc.rodovia_afetada && (
+                                                            <div className="text-gray-600 mt-0.5">Rodovia: {inc.rodovia_afetada}</div>
                                                         )}
                                                     </div>
                                                 </div>
@@ -685,6 +757,28 @@ export default function ConsultaPage() {
                                         </div>
                                     )}
                                 </div>
+
+                                {/* Erros de API */}
+                                {data.erros && (data.erros.google || data.erros.here) && (
+                                    <div
+                                        className="p-3 rounded-lg"
+                                        style={{ background: "#1e1e1e", border: "1px solid #ef444466" }}
+                                    >
+                                        <div className="text-xs font-bold text-red-400 uppercase tracking-widest mb-1.5">
+                                            Erros de API
+                                        </div>
+                                        {data.erros.google && (
+                                            <div className="text-xs text-red-300 mb-1">
+                                                <span className="font-bold">Google:</span> {data.erros.google}
+                                            </div>
+                                        )}
+                                        {data.erros.here && (
+                                            <div className="text-xs text-red-300">
+                                                <span className="font-bold">HERE:</span> {data.erros.here}
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
                             </motion.div>
                         )}
                     </AnimatePresence>
@@ -734,7 +828,7 @@ export default function ConsultaPage() {
                                 }
                             >
                                 <MapView
-                                    routePts={data.route_pts || []}
+                                    routePts={data.display_pts || data.route_pts || []}
                                     flowPts={data.flow_pts || []}
                                     viaCoords={data.via_coords || []}
                                     status={data.status}

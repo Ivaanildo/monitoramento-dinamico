@@ -7,6 +7,14 @@ import { RadarIcon } from "../components/RadarIcon";
 import { ArrowUpDown, ChevronUp, ChevronDown } from "lucide-react";
 
 // ─── Mock Data ───────────────────────────────────────────────────────────────
+interface Incidente {
+  categoria?: string;
+  descricao?: string;
+  severidade?: string;
+  rodovia_afetada?: string;
+  road_closed?: boolean;
+}
+
 interface Road {
   id: number;
   via: string;
@@ -18,6 +26,10 @@ interface Road {
   hora: string;
   atraso_min: number;
   confianca_pct: number;
+  incidentes: Incidente[];
+  duracao_normal_min: number;
+  duracao_transito_min: number;
+  jam_factor_max: number;
 }
 
 
@@ -83,7 +95,11 @@ export default function PainelPage() {
           relato: r.relato || "",
           hora: r.hora_atualizacao,
           atraso_min: r.atraso_min || 0,
-          confianca_pct: r.confianca_pct || 0
+          confianca_pct: r.confianca_pct || 0,
+          incidentes: r.incidentes || [],
+          duracao_normal_min: r.duracao_normal_min || 0,
+          duracao_transito_min: r.duracao_transito_min || 0,
+          jam_factor_max: r.jam_factor_max || 0,
         }));
         setRoads(mapped);
       } catch (err: any) {
@@ -428,6 +444,10 @@ export default function PainelPage() {
                 >
                   <RouteCard
                     {...road}
+                    incidentes={road.incidentes}
+                    duracao_normal_min={road.duracao_normal_min}
+                    duracao_transito_min={road.duracao_transito_min}
+                    jam_factor_max={road.jam_factor_max}
                     onVerObs={(id) => window.open(`/consulta?rota_id=${id}`, '_blank')}
                   />
                 </motion.div>

@@ -2,6 +2,14 @@ import React, { useState } from "react";
 import { ArrowRight, ArrowLeft, Map } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 
+interface IncidenteCard {
+    categoria?: string;
+    descricao?: string;
+    severidade?: string;
+    rodovia_afetada?: string;
+    road_closed?: boolean;
+}
+
 export interface RouteCardProps {
     id: string | number;
     via: string;
@@ -13,6 +21,10 @@ export interface RouteCardProps {
     hora: string;
     atraso_min?: number;
     confianca_pct?: number;
+    incidentes?: IncidenteCard[];
+    duracao_normal_min?: number;
+    duracao_transito_min?: number;
+    jam_factor_max?: number;
     onVerObs?: (id: string | number) => void;
 }
 
@@ -52,7 +64,8 @@ const STATUS_THEME = {
 export function RouteCard(props: RouteCardProps) {
     const {
         id, via, trecho, status, ocorrencia, relato,
-        atraso_min = 0, confianca_pct = 0, onVerObs
+        atraso_min = 0, confianca_pct = 0, onVerObs,
+        incidentes = [], duracao_normal_min = 0, duracao_transito_min = 0, jam_factor_max = 0,
     } = props;
 
     const [isFlipped, setIsFlipped] = useState(false);
@@ -148,7 +161,7 @@ export function RouteCard(props: RouteCardProps) {
                         transition={{ duration: 0.2 }}
                         className="flex flex-col h-full w-full"
                     >
-                        <div className="flex justify-between items-start mb-3">
+                        <div className="flex justify-between items-start mb-2">
                             <h3 className="font-bold text-gray-800 text-lg truncate pr-2">
                                 Observação
                             </h3>
@@ -159,11 +172,92 @@ export function RouteCard(props: RouteCardProps) {
                             </div>
                         </div>
 
-                        <div className="flex-1 overflow-y-auto mb-4 pr-1 scrollbar-thin scrollbar-thumb-gray-300">
-                            <p className="text-gray-700 text-sm italic border-l-2 border-gray-200 pl-3 py-1">
-                                "{relato || "Nenhuma observação reportada para este trecho no momento."}"
-                            </p>
+                        {/* Pills de métricas */}
+                        <div className="flex flex-wrap gap-1.5 mb-2">
+                            {duracao_normal_min > 0 && (
+                                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-gray-100 text-gray-600">
+                                    Normal: {duracao_normal_min} min
+                                </span>
+                            )}
+                            {duracao_transito_min > 0 && (
+                                <span
+                                    className="text-[10px] font-bold px-1.5 py-0.5 rounded"
+                                    style={{
+                                        backgroundColor: duracao_transito_min > duracao_normal_min ? "#fff7ed" : "#f0fdf4",
+                                        color: duracao_transito_min > duracao_normal_min ? "#c2410c" : "#15803d",
+                                    }}
+                                >
+                                    Atual: {duracao_transito_min} min
+                                </span>
+                            )}
+                            {jam_factor_max > 0 && (
+                                <span
+                                    className="text-[10px] font-bold px-1.5 py-0.5 rounded"
+                                    style={{
+                                        backgroundColor: jam_factor_max >= 8 ? "#fef2f2" : jam_factor_max >= 5 ? "#fff7ed" : "#f3f4f6",
+                                        color: jam_factor_max >= 8 ? "#b91c1c" : jam_factor_max >= 5 ? "#c2410c" : "#6b7280",
+                                    }}
+                                >
+                                    Jam: {jam_factor_max.toFixed(1)}
+                                </span>
+                            )}
                         </div>
+
+                        {/* Texto relato multi-linha */}
+                        <div className="flex-1 overflow-y-auto mb-2 pr-1 scrollbar-thin scrollbar-thumb-gray-300">
+                            {relato ? (
+                                <div className="text-sm border-l-2 border-gray-200 pl-3 py-1 space-y-0.5">
+                                    {relato.split('\n').map((line, i) => (
+                                        <p
+                                            key={i}
+                                            className={i === 0 ? "font-bold text-gray-800" : "text-gray-600 text-xs"}
+                                        >
+                                            {line}
+                                        </p>
+                                    ))}
+                                </div>
+                            ) : (
+                                <p className="text-gray-500 text-sm italic border-l-2 border-gray-200 pl-3 py-1">
+                                    Nenhuma observação reportada para este trecho no momento.
+                                </p>
+                            )}
+                        </div>
+
+                        {/* Mini-lista de incidentes */}
+                        {incidentes.length > 0 && (
+                            <div className="mb-2">
+                                <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">
+                                    Incidentes ({incidentes.length})
+                                </div>
+                                <div className="flex flex-col gap-1">
+                                    {incidentes.slice(0, 3).map((inc, i) => (
+                                        <div key={i} className="flex items-center gap-1.5 text-[11px]">
+                                            <span
+                                                className="w-1.5 h-1.5 rounded-full flex-shrink-0"
+                                                style={{
+                                                    background:
+                                                        inc.severidade === "critical" ? "#ef4444" :
+                                                        inc.severidade === "major" ? "#f97316" : "#eab308",
+                                                }}
+                                            />
+                                            <span className="text-gray-700 font-medium truncate">
+                                                {inc.categoria || "Incidente"}
+                                            </span>
+                                            {inc.road_closed && (
+                                                <span className="text-[9px] font-bold px-1 py-px rounded bg-red-100 text-red-700">
+                                                    FECHADA
+                                                </span>
+                                            )}
+                                        </div>
+                                    ))}
+                                    {incidentes.length > 3 && (
+                                        <span className="text-[10px] text-gray-400 italic">
+                                            +{incidentes.length - 3} mais
+                                        </span>
+                                    )}
+                                </div>
+                            </div>
+                        )}
 
                         <div className="flex justify-between items-end mt-auto pt-2 border-t border-gray-100">
                             <div />
