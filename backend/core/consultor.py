@@ -147,10 +147,6 @@ def consultar(
     dur_transito = int(google_result.get("duracao_transito_min", 0)) if google_ok else 0
 
     status_merged = status.status_final(g_status, h_status)
-    # Regra: atraso medido pelo Google < 20 min → Normal (suprime falso positivo do HERE em segmentos isolados)
-    # Guarda google_ok: evita forçar Normal quando Google falhou e atraso_min defaultou para 0
-    if google_ok and 0 <= atraso_min < 20 and status_merged in ("Moderado", "Intenso"):
-        status_merged = "Normal"
 
     distancia_km = float(google_result.get("distancia_km", 0.0)) if google_ok else 0.0
     razao = float(google_result.get("razao_transito", 0.0)) if google_ok else 0.0
@@ -188,6 +184,15 @@ def consultar(
 
     # Incidente principal (mais grave) — retorna dict ou None
     inc_principal = status.incidente_principal(incidentes)
+
+    # Regra: atraso medido pelo Google < 20 min → Normal (suprime falso positivo do HERE)
+    # Isenção: incidentes graves (Interdição, Colisão etc.) mantêm status mesmo com atraso baixo
+    tem_incidente_grave = any(
+        inc.get("categoria") in status.CATEGORIAS_GRAVES for inc in incidentes
+    )
+    if google_ok and 0 <= atraso_min < 20 and status_merged in ("Moderado", "Intenso"):
+        if not tem_incidente_grave:
+            status_merged = "Normal"
 
     # Observação rica para exibição no painel
     relato = status.gerar_observacao(

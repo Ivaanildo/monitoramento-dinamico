@@ -11,6 +11,7 @@ interface Incidente {
   categoria?: string;
   descricao?: string;
   severidade?: string;
+  severidade_codigo?: string;
   rodovia_afetada?: string;
   road_closed?: boolean;
 }

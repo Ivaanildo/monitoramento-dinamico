@@ -148,8 +148,8 @@ class TestInferirOcorrencia:
         inc = {"categoria": "Colisão", "descricao": "Acidente na pista"}
         assert inferir_ocorrencia(inc, jam_max=0, atraso_min=0) == "Colisão"
 
-    def test_infere_engarrafamento_por_jam(self):
-        assert inferir_ocorrencia(None, jam_max=6, atraso_min=0) == "Engarrafamento"
+    def test_infere_lentidao_por_jam(self):
+        assert inferir_ocorrencia(None, jam_max=6, atraso_min=0) == "Lentidão"
 
     def test_infere_engarrafamento_por_atraso(self):
         assert inferir_ocorrencia(None, jam_max=0, atraso_min=20) == "Engarrafamento"

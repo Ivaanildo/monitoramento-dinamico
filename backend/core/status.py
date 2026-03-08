@@ -6,6 +6,9 @@ Portado de monitor-rodovias/sources/google_maps.py + correlator.py.
 # Ordem de severidade
 _NIVEL = {"Sem dados": -1, "Erro": -1, "Normal": 0, "Moderado": 1, "Intenso": 2, "Parado": 3}
 
+# Categorias de incidente que isentam a regra de supressão atraso < 20 min → Normal.
+CATEGORIAS_GRAVES = {"Interdição", "Colisão", "Acidente", "Bloqueio Parcial", "Obras na Pista"}
+
 
 def classificar_transito(duracao_normal_s: float, duracao_transito_s: float) -> str:
     """Classifica trânsito baseado no atraso absoluto em minutos.
@@ -126,11 +129,22 @@ def gerar_observacao(
             f"Duracao normal: {dur_normal} min, atual: {dur_transito} min"
         )
     elif atraso_min > 0:
-        linhas.append(
-            f"Via {via}: transito levemente acima do normal "
-            f"(+{atraso_min} min). "
-            f"Duracao normal: {dur_normal} min, atual: {dur_transito} min"
-        )
+        if inc:
+            categoria = inc.get("categoria", "Ocorrência")
+            linhas.append(
+                f"{categoria} em {via}: "
+                f"Atraso {atraso_min} min | "
+                f"Duracao normal: {dur_normal} min, atual: {dur_transito} min"
+            )
+            desc = inc.get("descricao", "")
+            if desc:
+                linhas.append(desc)
+        else:
+            linhas.append(
+                f"Via {via}: transito levemente acima do normal "
+                f"(+{atraso_min} min). "
+                f"Duracao normal: {dur_normal} min, atual: {dur_transito} min"
+            )
     elif inc:
         categoria = inc.get("categoria", "Ocorrência")
         descricao = inc.get("descricao", "")
@@ -182,8 +196,10 @@ def inferir_ocorrencia(incidente_principal: dict | None, jam_max: float, atraso_
     """Retorna categoria de ocorrência, inferindo Engarrafamento se necessário."""
     if incidente_principal:
         return incidente_principal.get("categoria", "")
-    if jam_max >= 5 or atraso_min >= 20:
+    if atraso_min >= 20:
         return "Engarrafamento"
+    if jam_max >= 5:
+        return "Lentidão"
     return ""
 
 

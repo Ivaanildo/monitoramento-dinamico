@@ -6,6 +6,7 @@ interface IncidenteCard {
     categoria?: string;
     descricao?: string;
     severidade?: string;
+    severidade_codigo?: string;
     rodovia_afetada?: string;
     road_closed?: boolean;
 }
@@ -230,26 +231,39 @@ export function RouteCard(props: RouteCardProps) {
                                     Incidentes ({incidentes.length})
                                 </div>
                                 <div className="flex flex-col gap-1">
-                                    {incidentes.slice(0, 3).map((inc, i) => (
-                                        <div key={i} className="flex items-center gap-1.5 text-[11px]">
-                                            <span
-                                                className="w-1.5 h-1.5 rounded-full flex-shrink-0"
-                                                style={{
-                                                    background:
-                                                        inc.severidade === "critical" ? "#ef4444" :
-                                                        inc.severidade === "major" ? "#f97316" : "#eab308",
-                                                }}
-                                            />
-                                            <span className="text-gray-700 font-medium truncate">
-                                                {inc.categoria || "Incidente"}
-                                            </span>
-                                            {inc.road_closed && (
-                                                <span className="text-[9px] font-bold px-1 py-px rounded bg-red-100 text-red-700">
-                                                    FECHADA
+                                    {incidentes.slice(0, 3).map((inc, i) => {
+                                        const sevCode = inc.severidade_codigo || inc.severidade;
+                                        return (
+                                        <div key={i} className="flex flex-col">
+                                            <div className="flex items-center gap-1.5 text-[11px]">
+                                                <span
+                                                    className="w-1.5 h-1.5 rounded-full flex-shrink-0"
+                                                    style={{
+                                                        background:
+                                                            sevCode === "critical" ? "#ef4444" :
+                                                            sevCode === "major" ? "#f97316" : "#eab308",
+                                                    }}
+                                                />
+                                                <span className="text-gray-700 font-medium truncate">
+                                                    {inc.categoria || "Incidente"}
+                                                </span>
+                                                {inc.rodovia_afetada && (
+                                                    <span className="text-gray-500 text-[10px]">{inc.rodovia_afetada}</span>
+                                                )}
+                                                {inc.road_closed && (
+                                                    <span className="text-[9px] font-bold px-1 py-px rounded bg-red-100 text-red-700">
+                                                        FECHADA
+                                                    </span>
+                                                )}
+                                            </div>
+                                            {inc.descricao && (
+                                                <span className="text-gray-400 text-[10px] truncate pl-3 block">
+                                                    {inc.descricao.length > 80 ? inc.descricao.slice(0, 80) + "..." : inc.descricao}
                                                 </span>
                                             )}
                                         </div>
-                                    ))}
+                                        );
+                                    })}
                                     {incidentes.length > 3 && (
                                         <span className="text-[10px] text-gray-400 italic">
                                             +{incidentes.length - 3} mais

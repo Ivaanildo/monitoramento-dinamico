@@ -793,6 +793,15 @@ def _filtrar_relevancia_rodovia(
     if not codigos_rota:
         return incidentes
 
+    # No modo corridor (200m de raio), a proximidade geométrica já garante
+    # relevância — pular filtro por código de rodovia, manter só via urbana.
+    if metodo_busca == "corridor":
+        filtrados = [inc for inc in incidentes if not _e_via_urbana(inc)]
+        n_desc = len(incidentes) - len(filtrados)
+        if n_desc:
+            logger.info(f"Filtro rodovia (corridor): {n_desc} vias urbanas descartadas, {len(filtrados)} mantidos")
+        return filtrados
+
     filtrados: list = []
     descartados = {"sem_codigo": 0, "rodovia_divergente": 0}
     for inc in incidentes:

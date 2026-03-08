@@ -40,11 +40,25 @@ def test_rota_multi_br_aceita_incidente_com_codigo_compativel():
     assert filtrados == [inc]
 
 
-def test_incidente_com_rodovia_divergente_e_rejeitado():
+def test_incidente_com_rodovia_divergente_mantido_no_corridor():
+    """No corridor, proximidade geométrica garante relevância — incidentes de
+    rodovia não são rejeitados por código divergente."""
+    inc = _incidente(descricao="Colisao na BR-381 km 10")
+    filtrados = here_incidents._filtrar_relevancia_rodovia(  # noqa: SLF001
+        [inc],
+        ["BR-116"],
+        "corridor",
+    )
+
+    assert filtrados == [inc]
+
+
+def test_incidente_com_rodovia_divergente_e_rejeitado_no_bbox():
+    """No bbox, incidentes com código de rodovia divergente ainda são rejeitados."""
     filtrados = here_incidents._filtrar_relevancia_rodovia(  # noqa: SLF001
         [_incidente(descricao="Colisao na BR-381 km 10")],
         ["BR-116"],
-        "corridor",
+        "bbox",
     )
 
     assert filtrados == []

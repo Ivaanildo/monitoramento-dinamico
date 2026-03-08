@@ -10,7 +10,7 @@ from datetime import datetime, timezone
 
 from core import consultor, rotas_corporativas
 from core.cache import get_cache
-from core.status import inferir_ocorrencia, aplicar_override_ocorrencia, gerar_observacao
+from core.status import inferir_ocorrencia, aplicar_override_ocorrencia, gerar_observacao, CATEGORIAS_GRAVES
 from storage.repository import salvar_snapshot_agregado
 
 logger = logging.getLogger(__name__)
@@ -176,11 +176,10 @@ async def obter_painel_agregado(config: dict) -> dict:
                 except (ValueError, TypeError):
                     _atr = 0
                 # Regra de supressão: atraso medido pelo Google < 20 min → Normal.
-                # Suprime falso positivo do HERE em segmentos isolados (jam_max alto
-                # num trecho curto que não impacta a viagem total). Guarda _atr > 0
-                # para evitar forçar Normal quando Google não retornou dado naquele ciclo.
+                # Isenção: incidentes graves mantêm status mesmo com atraso baixo.
                 if 0 < _atr < 20 and status in ("Moderado", "Intenso"):
-                    status = "Normal"
+                    if ocorrencia not in CATEGORIAS_GRAVES:
+                        status = "Normal"
             else:
                 status = "N/A"
                 ocorrencia = ""
