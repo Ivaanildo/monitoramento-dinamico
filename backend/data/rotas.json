@@ -447,9 +447,7 @@
         "destination": "-25.421866,-49.225886",
         "via": [
           "-23.819279,-46.924639!passThrough=true",
-          "-23.676651,-47.322342!passThrough=true",
           "-24.175007,-47.650001!passThrough=true",
-          "-24.265931,-47.390077!passThrough=true",
           "-24.701509,-48.00768!passThrough=true",
           "-24.961816,-48.477033!passThrough=true",
           "-25.350153,-49.056812!passThrough=true"
@@ -458,9 +456,9 @@
       },
       "waypoints_status": {
         "has_waypoints": true,
-        "source": "seed_waypoints.py: HERE Routing v8 polyline resampling",
-        "generated_at": "2026-03-01T13:16:05Z",
-        "n_points": 7,
+        "source": "audit_waypoints.py: removed WP2+WP4 (backtracking/zigzag)",
+        "generated_at": "2026-03-08T12:00:00Z",
+        "n_points": 5,
         "distance_km": 709.3
       },
       "limite_gap_km": 106
@@ -618,8 +616,6 @@
           "-22.455455,-44.391481!passThrough=true",
           "-22.437054,-43.780625!passThrough=true",
           "-22.103391,-43.169719!passThrough=true",
-          "-21.580591,-43.466909!passThrough=true",
-          "-21.2558,-43.662107!passThrough=true",
           "-21.751005,-43.352427!passThrough=true",
           "-21.592685,-42.785335!passThrough=true",
           "-21.12651,-42.371074!passThrough=true",
@@ -629,20 +625,15 @@
           "-18.822218,-41.941983!passThrough=true",
           "-19.132573,-41.43598!passThrough=true",
           "-19.522211,-41.010784!passThrough=true",
-          "-19.656587,-40.459599!passThrough=true",
-          "-20.21948,-40.355541!passThrough=true",
-          "-20.729985,-40.744658!passThrough=true",
-          "-20.758557,-41.259522!passThrough=true",
-          "-20.766445,-41.166302!passThrough=true",
-          "-20.684648,-40.671961!passThrough=true"
+          "-19.656587,-40.459599!passThrough=true"
         ],
         "alternatives": 0
       },
       "waypoints_status": {
         "has_waypoints": true,
-        "source": "seed_waypoints.py: HERE Routing v8 polyline resampling",
-        "generated_at": "2026-03-01T13:16:13Z",
-        "n_points": 23,
+        "source": "audit_waypoints.py: removed WP7,WP8,WP17,WP20-23 (backtracking/loops)",
+        "generated_at": "2026-03-08T12:00:00Z",
+        "n_points": 16,
         "distance_km": 2003.2
       },
       "limite_gap_km": 106
