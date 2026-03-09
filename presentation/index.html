@@ -584,35 +584,29 @@
           </div>
         </div>
       </div>
-      <h1 class="animate-in">Monitoramento Dinâmico de Rotas<br>e Tráfego em Tempo Real</h1>
-      <p class="subtitle animate-in delay-1">Arquitetura, capacidades, custos e pontos de atenção</p>
-      <p class="small animate-in delay-2" style="margin-top:28px;">Março 2026 &nbsp;·&nbsp; Versão 2.0</p>
+      <h1 class="animate-in">Monitoramento Dinâmico</h1>
+      <p class="subtitle animate-in delay-1">Visibilidade em Tempo Real para Frotas de Longa Distância</p>
+      <p class="small animate-in delay-2" style="margin-top:28px;">Março 2026 &nbsp;·&nbsp; Versão 2.1</p>
       <p class="small animate-in delay-3" style="margin-top:40px;opacity:.5;">Use as setas ← → para navegar</p>
     </div>
   </section>
 
-  <!-- ===== SLIDE 2: DOR OPERACIONAL & LEITURA ANALÍTICA ===== -->
+  <!-- ===== SLIDE 2: DOR OPERACIONAL — VOANDO ÀS CEGAS ===== -->
   <section class="slide" data-slide="2">
     <div class="slide-inner">
-      <h2 class="animate-in">Dor Operacional (O Problema Real) e Leitura Analítica de Valor</h2>
-      <p class="subtitle animate-in" style="margin-bottom:20px;">Comparativo de eficiência: o que ganhamos na prática
-        com o sistema automátizado</p>
+      <h2 class="animate-in">Voando às Cegas em 22.000 km</h2>
+      <p class="subtitle animate-in" style="margin-bottom:20px;">Operar rotas de longa distância no Brasil sem visibilidade em tempo real gera atrasos imprevistos e decisões reativas.</p>
       <div class="compare-cols animate-in delay-1">
         <div class="compare-col compare-before">
-          <h3 style="color:var(--red);">Cenário Sem Sistema</h3>
+          <h3 style="color:var(--red);">O Paradoxo das Ferramentas Atuais</h3>
           <ul class="clean cross">
-            <li>Monitoramento manual de 20+ rodovias consome horas/dia</li>
-            <li>Dados genéricos de plataformas públicas — sem foco nas rotas reais</li>
-            <li>Impossível padronizar comparações entre rotas</li>
-            <li>Sem histórico, sem exportação, sem indicadores consolidados</li>
+            <li><strong>Aplicativos B2C:</strong> Google Maps e Waze são desenhados para CPFs (rotas individuais), não para CNPJs monitorando dezenas de frotas</li>
+            <li><strong>Sistemas TMS:</strong> Caros, apresentam alta latência e não integram dados externos de tráfego com fluidez</li>
+            <li><strong>Processo Manual:</strong> Consultar trecho a trecho é impossível de escalar. O gestor só descobre o bloqueio quando o motorista já está preso nele</li>
           </ul>
-          <div style="margin-top:14px;text-align:center;">
-            <div class="number-big" style="color:var(--red);">255</div>
-            <p class="small">incidentes irrelevantes por consulta regional</p>
-          </div>
         </div>
         <div class="compare-col compare-after">
-          <h3 style="color:var(--green);">Com o Sistema Automatizado</h3>
+          <h3 style="color:var(--green);">Com o Monitoramento Dinâmico</h3>
           <ul class="clean check">
             <li>Resposta consolidada em menos de 10 segundos</li>
             <li>Filtragem cirúrgica: apenas 200m ao redor da estrada real</li>
@@ -620,41 +614,51 @@
             <li>Exportação Excel/CSV, favoritos, links Waze e Maps</li>
           </ul>
           <div style="margin-top:14px;text-align:center;">
-            <div class="number-big" style="color:var(--green);">2</div>
-            <p class="small">incidentes relevantes na rota efetiva</p>
+            <div class="number-big" style="color:var(--green);">99,2%</div>
+            <p class="small">de redução de ruído — dado real: Campinas → São Paulo</p>
           </div>
         </div>
       </div>
-      <div class="highlight-box green-box animate-in delay-2" style="margin-top:16px;">
-        <span class="number-medium" style="color:var(--green);">99,2%</span> de redução de ruído — dado real: Campinas →
-        São Paulo
+      <div class="highlight-box animate-in delay-2" style="margin-top:16px;">
+        <strong>Informação que chega antes do problema.</strong> Da reação ao planejamento preventivo.
       </div>
     </div>
   </section>
 
-  <!-- ===== SLIDE 3: PARTES IMPORTANTES DO SISTEMA ===== -->
+  <!-- ===== SLIDE 3: A SOLUÇÃO — DE REATIVO PARA PROATIVO ===== -->
   <section class="slide" data-slide="3">
     <div class="slide-inner">
-      <h2 class="animate-in">Partes importantes do sistema</h2>
-      <p class="subtitle animate-in">Arquitetura da aplicação completa em produção — Março 2026</p>
-      <div class="animate-in delay-1" style="margin:20px 0;">
-        <div class="arch-layer"><span class="layer-label">Frontend</span><span>React + Vite + TypeScript — Dashboard
-            responsivo e modular com comunicação REST</span></div>
-        <div class="arch-layer"><span class="layer-label">Backend</span><span>Python (FastAPI) — Core da lógica,
-            endpoints concorrentes e tratamento de regras de negócio</span></div>
-        <div class="arch-layer"><span class="layer-label">Integrações</span><span>Google Routes Pro e HERE Maps —
-            Chamadas agendadas via ThreadPoolExecutor para status unificado</span></div>
-        <div class="arch-layer"><span class="layer-label">Dados</span><span>Supabase (PostgreSQL) para histórico
-            temporal / cache robusto local para economia financeira nas consultas</span></div>
-        <div class="arch-layer"><span class="layer-label">Worker</span><span>Tasks assíncronas em plano de fundo
-            responsáveis pelas varreduras automáticas de dados recorrentes</span></div>
-        <div class="arch-layer"><span class="layer-label">Segurança</span><span>Proteção de rotas, chaves encriptadas
-            localmente e refatorações no threat-model inicial.</span></div>
+      <h2 class="animate-in">A Solução: De Reativo para Proativo</h2>
+      <p class="subtitle animate-in">Um painel unificado de inteligência cobrindo o Sul, Sudeste, Centro-Oeste e Nordeste</p>
+      <div class="card-grid grid-2 animate-in delay-1" style="margin:18px 0;">
+        <div class="card card-accent">
+          <h3>20 Rotas Corporativas</h3>
+          <p>Cobrindo <strong>22.350 km</strong> de rodovias federais, de Cajamar (SP) até destinos em PE, BA, SC, RS, PR, MG, GO e MS.</p>
+          <div style="margin-top:10px;">
+            <span class="road-tag">BR-101</span> <span class="road-tag">BR-116</span> <span class="road-tag">BR-381</span>
+            <span class="road-tag">BR-153</span> <span class="road-tag">BR-040</span> <span class="road-tag">BR-376</span>
+            <span class="road-tag">BR-277</span> <span class="road-tag">BR-060</span> <span class="road-tag">BR-364</span>
+          </div>
+        </div>
+        <div class="card card-green">
+          <h3>Ciclos Automatizados</h3>
+          <p>Coleta paralela e silenciosa de dados. O coletor roda nos bastidores via GitHub Actions, salva no Supabase e gera relatórios gerenciais.</p>
+          <p class="small" style="margin-top:8px;">Frequência configurável: de 15 min a 3 horas</p>
+        </div>
+        <div class="card card-yellow">
+          <h3>Alertas Precisos</h3>
+          <p>Cruzamento inteligente de fontes externas (Google + HERE) com supressão de falsos positivos e radar semântico de incidentes.</p>
+        </div>
+        <div class="card card-accent">
+          <h3>Relatórios Autônomos</h3>
+          <p>Histórico auditável sem intervenção humana. Excel (.xlsx) e CSV formatados no fuso BRT, com 3 camadas de dados.</p>
+        </div>
       </div>
-      <div class="critical-note animate-in delay-2">
-        <strong>⚠ Ponto de atenção:</strong> A autenticação atual é local e temporária. Credenciais ficam no
-        <code>config.yaml</code>. A migração para Supabase Auth é uma pendência técnica relevante para produção em
-        escala.
+      <div class="animate-in delay-2" style="margin:20px 0;">
+        <div class="arch-layer"><span class="layer-label">Frontend</span><span>React + Vite + TypeScript — Dashboard responsivo e modular</span></div>
+        <div class="arch-layer"><span class="layer-label">Backend</span><span>Python (FastAPI) — Paralelismo total (asyncio + ThreadPoolExecutor)</span></div>
+        <div class="arch-layer"><span class="layer-label">Dados</span><span>Supabase (PostgreSQL) — Ciclos históricos e snapshots com precisão</span></div>
+        <div class="arch-layer"><span class="layer-label">Worker</span><span>GitHub Actions (Cron) — Orquestração automática 24/7</span></div>
       </div>
     </div>
   </section>
@@ -708,76 +712,85 @@
     </div>
   </section>
 
-  <!-- ===== SLIDE 5: O QUE O SISTEMA RESOLVE ===== -->
+  <!-- ===== SLIDE 5: SIMPLIFICANDO O CAOS EM 5 ESTADOS ===== -->
   <section class="slide" data-slide="5">
     <div class="slide-inner">
-      <h2 class="animate-in">O Que o Sistema Resolve (Valor Prático)</h2>
-      <div class="card-grid grid-2x3 animate-in delay-1">
-        <div class="card card-green">
-          <h3>🚦 Status em 4 Níveis</h3>
-          <p><span class="badge badge-normal">Normal</span> <span class="badge badge-moderado">Moderado</span> <span
-              class="badge badge-intenso">Intenso</span> <span class="badge badge-parado">Parado</span></p>
-          <p class="small" style="margin-top:6px;">Decisão baseada no atraso do Google e no <strong>Jam Factor</strong>
-            (índice de 0 a 10 da HERE que mede o nível de congestionamento local).</p>
+      <h2 class="animate-in">Simplificando o Caos em 5 Estados</h2>
+      <p class="subtitle animate-in">A logística exige decisões em segundos. Gigabytes de dados brutos são traduzidos em comandos claros de ação.</p>
+      <div class="card-grid" style="grid-template-columns:1fr 1fr 1fr 1fr 1fr;gap:12px;margin:20px 0;" class="animate-in delay-1">
+        <div class="card animate-in delay-1" style="border-top:4px solid var(--green);text-align:center;">
+          <span class="badge badge-normal" style="font-size:1.1em;">Normal</span>
+          <p style="margin-top:10px;font-size:.92em;">Tráfego fluindo bem.</p>
         </div>
+        <div class="card animate-in delay-1" style="border-top:4px solid var(--yellow);text-align:center;">
+          <span class="badge badge-moderado" style="font-size:1.1em;">Moderado</span>
+          <p style="margin-top:10px;font-size:.92em;">Lentidão detectada, atenção redobrada.</p>
+        </div>
+        <div class="card animate-in delay-2" style="border-top:4px solid var(--red);text-align:center;">
+          <span class="badge badge-intenso" style="font-size:1.1em;">Intenso</span>
+          <p style="margin-top:10px;font-size:.92em;">Atraso crítico de tempo. Avaliar desvios imediatos.</p>
+        </div>
+        <div class="card animate-in delay-2" style="border-top:4px solid #7c3aed;text-align:center;">
+          <span class="badge badge-parado" style="font-size:1.1em;">Parado</span>
+          <p style="margin-top:10px;font-size:.92em;">Via completamente bloqueada (Interdição).</p>
+        </div>
+        <div class="card animate-in delay-3" style="border-top:4px solid #9ca3af;text-align:center;">
+          <span class="badge" style="background:#f0f1f5;color:#6b7c93;font-size:1.1em;">Erro/N/A</span>
+          <p style="margin-top:10px;font-size:.92em;">Sem dados das APIs na janela atual.</p>
+        </div>
+      </div>
+      <div class="card-grid grid-2 animate-in delay-3" style="margin-top:8px;">
         <div class="card card-accent">
-          <h3>⏱️ Tempo e Atraso</h3>
-          <p>Duração normal vs. com trânsito, atraso em minutos, distância em km</p>
-        </div>
-        <div class="card card-orange">
-          <h3>⚠️ Incidentes na Rota</h3>
-          <p>Acidentes, obras, interdições — filtrados em corredor de 200m da estrada real</p>
-        </div>
-        <div class="card card-accent">
-          <h3>🗺️ Mapa Interativo</h3>
-          <p>Rota colorida por tráfego (verde, laranja e vermelho, extraídos dos dados de fluxo espacial da API HERE) +
-            incidentes clicáveis.</p>
-        </div>
-        <div class="card card-yellow">
-          <h3>📊 Indicador de Confiança</h3>
-          <p>Alta (100%), Média (50%) ou Sem Dados (0%) — baseado em quantas fontes responderam com sucesso.</p>
+          <h3>Duas Fontes, Uma Verdade</h3>
+          <p>O "cérebro" do Monitoramento Dinâmico cruza o melhor dos dois mundos: <strong style="color:var(--google-blue);">Atraso Absoluto</strong> (Google) + <strong style="color:var(--here-teal);">Contexto e Jam Factor</strong> (HERE).</p>
         </div>
         <div class="card card-green">
-          <h3>📥 Exportação</h3>
-          <p>Excel estilizado (.xlsx) e CSV — compatíveis com ERP, TMS e Power BI</p>
+          <h3>Regra do Mais Severo</h3>
+          <p>O status mais grave detectado prevalece. Se Google diz "Moderado" e HERE diz "Intenso", o resultado final é <span class="badge badge-intenso">Intenso</span>.</p>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- ===== SLIDE 6: ROTAS CORPORATIVAS E PAINEL ===== -->
+  <!-- ===== SLIDE 6: OPERANDO EM ESCALA CONTINENTAL ===== -->
   <section class="slide" data-slide="6">
     <div class="slide-inner">
-      <h2 class="animate-in">Painel Corporativo — 20 Rotas Monitoradas</h2>
-      <p class="subtitle animate-in">Dados persistidos no Supabase, atualizados por ciclos automáticos</p>
+      <h2 class="animate-in">Operando em Escala Continental</h2>
+      <p class="subtitle animate-in">22.350 km monitorados simultaneamente, com precisão de 200 metros</p>
       <div class="card-grid grid-2 animate-in delay-1" style="margin:18px 0;">
         <div class="card card-accent">
-          <h3>Estrutura das Rotas</h3>
-          <p>Cada rota possui: ID (R01–R20), hub de origem/destino, waypoints via HERE, e códigos de rodovia lógica (ex:
-            BR-101, BR-116).</p>
-          <div style="margin-top:10px;">
-            <span class="road-tag">BR-101</span> <span class="road-tag">BR-116</span> <span
-              class="road-tag">BR-381</span>
-            <span class="road-tag">BR-153</span> <span class="road-tag">BR-040</span> <span
-              class="road-tag">BR-376</span>
-            <span class="road-tag">BR-277</span> <span class="road-tag">BR-060</span> <span
-              class="road-tag">BR-364</span>
+          <h3>O Desafio das "Rotas Épicas"</h3>
+          <p>Nossa maior rota (R01: SP → PE) percorre <strong>2.565 km</strong> e exige 29 waypoints precisos. As APIs de tráfego quebram ou recusam análises de corredores tão longos.</p>
+          <div style="margin-top:12px;">
+            <div class="step">
+              <div class="step-num">1</div>
+              <div>Rotas divididas em <strong>chunks de ~450 km</strong></div>
+            </div>
+            <div class="step">
+              <div class="step-num">2</div>
+              <div>Cada bloco consultado cirurgicamente</div>
+            </div>
+            <div class="step">
+              <div class="step-num">3</div>
+              <div>Incidentes costurados no backend sem perder detalhes</div>
+            </div>
           </div>
         </div>
         <div class="card card-green">
-          <h3>Contrato do Painel (API)</h3>
-          <p>Endpoint <code>/painel</code> retorna JSON com:</p>
-          <ul class="clean" style="margin-top:6px;">
-            <li>rota_id, sigla, nome, trecho</li>
-            <li>status, ocorrência, relato</li>
-            <li>hora_atualização, confiança_pct, atraso_min</li>
-            <li>distância_km</li>
-          </ul>
+          <h3>Dois Motores de Operação</h3>
+          <div style="border-bottom:1px solid var(--border);padding-bottom:10px;margin-bottom:10px;">
+            <h4 style="margin-bottom:4px;">1. Ciclo Periódico (Automático)</h4>
+            <p class="small">O coletor roda silenciosamente nos bastidores, salva o histórico no Supabase e gera os relatórios gerenciais das 20 rotas.</p>
+            <p class="small" style="margin-top:4px;"><strong>Frequência:</strong> configurável de 15 min a 3 horas</p>
+          </div>
+          <div>
+            <h4 style="margin-bottom:4px;">2. Sob Demanda (Tempo Real)</h4>
+            <p class="small">Qualquer rota pode ser forçada para reconsulta manual, furando o cache inteligente (300 segundos) para entregar a "foto do minuto" em ~15 a 30 segundos.</p>
+          </div>
         </div>
       </div>
-      <div class="critical-note animate-in delay-2">
-        <strong>⚠ Análise crítica:</strong> O painel depende do Supabase para buscar o último ciclo. Se a conexão falhar
-        ou não houver ciclo recente, retorna vazio. Não há fallback para cache local neste fluxo específico.
+      <div class="highlight-box animate-in delay-2" style="margin-top:10px;">
+        <strong>Painel Corporativo:</strong> Endpoint <code>/painel</code> retorna 20 rotas com status, ocorrência, relato, atraso e confiança — persistidos no Supabase com histórico de ciclos.
       </div>
     </div>
   </section>
@@ -901,54 +914,47 @@
     </div>
   </section>
 
-  <!-- ===== SLIDE 9: CONFIANÇA DOS DADOS ===== -->
+  <!-- ===== SLIDE 9: SUPRESSÃO DE FALSOS POSITIVOS + RADAR SEMÂNTICO ===== -->
   <section class="slide" data-slide="9">
     <div class="slide-inner">
-      <h2 class="animate-in">Confiança dos Dados — Indicador de Qualidade</h2>
-      <div class="card-grid" style="grid-template-columns:1fr;gap:16px;max-width:750px;margin:20px auto;">
-        <div class="card card-green animate-in delay-1">
-          <div style="display:flex;align-items:center;gap:14px;">
-            <div style="font-size:1.8em;">✅✅</div>
-            <div style="flex:1;">
-              <h3 style="color:var(--green);">Alta — 100%</h3>
-              <p>Google + HERE responderam com sucesso</p>
-              <div class="bar-track">
-                <div class="bar-fill" style="width:100%;background:var(--green);">100%</div>
-              </div>
-              <p class="small">Dado confiável para decisão operacional</p>
-            </div>
+      <h2 class="animate-in">Supressão de Falsos Positivos + Radar Semântico</h2>
+      <p class="subtitle animate-in">A inteligência para não gritar "Lobo!" sem necessidade. Evitamos a fadiga de alarmes.</p>
+      <div class="card-grid grid-2 animate-in delay-1" style="margin:16px 0;">
+        <div class="card card-green">
+          <h3>O Problema do Posto de Gasolina</h3>
+          <p>A API HERE pode reportar trânsito "Intenso" em um trecho muito curto (ex: obras no acostamento, ou fila de posto). O impacto logístico real é nulo.</p>
+          <div class="highlight-box green-box" style="margin-top:10px;padding:8px 14px;">
+            <strong>A Solução:</strong> Se o HERE sinaliza "Intenso", mas o Google atesta que o atraso geral é inferior a 20 minutos, o sistema anula o alerta. Status final: <span class="badge badge-normal">Normal</span>
           </div>
         </div>
-        <div class="card card-yellow animate-in delay-2">
-          <div style="display:flex;align-items:center;gap:14px;">
-            <div style="font-size:1.8em;">✅❌</div>
-            <div style="flex:1;">
-              <h3 style="color:var(--yellow);">Média — 50%</h3>
-              <p>Apenas uma fonte respondeu</p>
-              <div class="bar-track">
-                <div class="bar-fill" style="width:50%;background:var(--yellow);">50%</div>
-              </div>
-              <p class="small">Usar com cautela — confirmar por outros meios se crítico</p>
-            </div>
-          </div>
-        </div>
-        <div class="card card-red animate-in delay-3">
-          <div style="display:flex;align-items:center;gap:14px;">
-            <div style="font-size:1.8em;">❌❌</div>
-            <div style="flex:1;">
-              <h3 style="color:var(--red);">Sem Dados — 0%</h3>
-              <p>Nenhuma fonte respondeu (falha de conectividade ou configuração)</p>
-              <div class="bar-track">
-                <div class="bar-fill" style="width:0%;background:var(--red);color:transparent;">0%</div>
-              </div>
-              <p class="small">Não usar para decisão — consultar manualmente</p>
-            </div>
-          </div>
+        <div class="card" style="border-left:4px solid #7c3aed;">
+          <h3>Radar Semântico de Incidentes</h3>
+          <p style="margin-bottom:10px;">O motor lê as descrições da HERE API para inferir a gravidade real e filtrar rodovias próximas:</p>
+          <table style="margin:0;font-size:.9em;">
+            <tr><td style="color:#7c3aed;font-weight:700;">Interdição (Peso 5)</td><td>Sobrescreve tudo → <span class="badge badge-parado" style="font-size:.8em;">Parado</span></td></tr>
+            <tr><td style="font-weight:600;">Bloqueio Parcial (Peso 4)</td><td>Eleva para <span class="badge badge-intenso" style="font-size:.8em;">Intenso</span></td></tr>
+            <tr><td style="color:var(--red);font-weight:600;">Colisão (Peso 3)</td><td>Promove Normal → <span class="badge badge-intenso" style="font-size:.8em;">Intenso</span></td></tr>
+            <tr><td style="color:var(--yellow);font-weight:600;">Obras na pista (Peso 2)</td><td>Aviso no relatório, sem impacto se sem atraso</td></tr>
+            <tr><td style="color:var(--text-sec);">Engarrafamento (Peso 1)</td><td>Informativo</td></tr>
+          </table>
         </div>
       </div>
-      <div class="critical-note animate-in delay-3">
-        <strong>Penalidade automática:</strong> Se o atraso calculado ultrapassar 90 minutos, a confiança perde 10
-        pontos — dados muito fora do comum podem indicar anomalia ou erro na API.
+      <div class="card-grid grid-3 animate-in delay-2">
+        <div class="card card-green" style="text-align:center;">
+          <h3 style="color:var(--green);">Alta — 100%</h3>
+          <div class="bar-track"><div class="bar-fill" style="width:100%;background:var(--green);">100%</div></div>
+          <p class="small">Google + HERE responderam</p>
+        </div>
+        <div class="card card-yellow" style="text-align:center;">
+          <h3 style="color:var(--yellow);">Média — 50%</h3>
+          <div class="bar-track"><div class="bar-fill" style="width:50%;background:var(--yellow);">50%</div></div>
+          <p class="small">Apenas uma fonte respondeu</p>
+        </div>
+        <div class="card card-red" style="text-align:center;">
+          <h3 style="color:var(--red);">Sem Dados — 0%</h3>
+          <div class="bar-track"><div class="bar-fill" style="width:0%;background:var(--red);color:transparent;">0%</div></div>
+          <p class="small">Nenhuma fonte respondeu</p>
+        </div>
       </div>
     </div>
   </section>
@@ -1033,102 +1039,114 @@
     </div>
   </section>
 
-  <!-- ===== SLIDE 11: PROJEÇÃO 20 ROTAS ===== -->
+  <!-- ===== SLIDE 11: SIMULADOR DE CUSTO POR FREQUÊNCIA ===== -->
   <section class="slide" data-slide="11">
     <div class="slide-inner">
-      <h2 class="animate-in">Projeção de Custo: 20 Rotas Corporativas</h2>
-      <p class="subtitle animate-in">Cenário atual configurado: 20 rotas, ciclos a cada 60 minutos, 24/7</p>
-      <div class="card-grid grid-2 animate-in delay-1" style="margin:14px 0;">
-        <div class="card">
-          <h3>Cálculo de Volume</h3>
-          <div class="step">
-            <div class="step-num">1</div>
-            <div>20 rotas × 24 consultas/dia = <strong>480/dia</strong></div>
+      <h2 class="animate-in">Simulador de Custo por Frequência de Consulta</h2>
+      <p class="subtitle animate-in">Consultas pré-programadas: 20 rotas | 24h/dia | 30 dias/mês | Câmbio: R$ 5,20</p>
+
+      <div class="card-grid grid-3 animate-in delay-1" style="margin:12px 0;">
+        <div class="card" style="padding:14px;">
+          <h3 style="font-size:1em;">Franquias Gratuitas/mês</h3>
+          <table style="margin:0;font-size:.92em;">
+            <tr><td><strong style="color:var(--google-blue);">Google Routes Pro</strong></td><td style="color:var(--green);font-weight:600;text-align:right;">10.000</td></tr>
+            <tr><td><strong style="color:var(--here-teal);">HERE Routing Truck</strong></td><td style="color:var(--green);font-weight:600;text-align:right;">5.000</td></tr>
+            <tr><td><strong style="color:var(--here-teal);">HERE Traffic (Inc+Flow)</strong></td><td style="color:var(--green);font-weight:600;text-align:right;">5.000</td></tr>
+          </table>
+        </div>
+        <div class="card" style="padding:14px;">
+          <h3 style="font-size:1em;">Fórmula Base</h3>
+          <div class="step" style="margin:4px 0;">
+            <div class="step-num" style="width:20px;height:20px;font-size:.75em;">1</div>
+            <div style="font-size:.92em;">20 rotas × ciclos/dia × 30 = chamadas/mês</div>
           </div>
-          <div class="step">
-            <div class="step-num">2</div>
-            <div>480 × 30 dias = <strong>14.400/mês</strong></div>
+          <div class="step" style="margin:4px 0;">
+            <div class="step-num" style="width:20px;height:20px;font-size:.75em;">2</div>
+            <div style="font-size:.92em;">HERE Traffic = 2× (incidents + flow)</div>
           </div>
-          <div class="step">
-            <div class="step-num">3</div>
-            <div>Intervalo (60 min) &gt; Cache TTL (5 min) → cada ciclo é nova chamada</div>
+          <div class="step" style="margin:4px 0;">
+            <div class="step-num" style="width:20px;height:20px;font-size:.75em;">3</div>
+            <div style="font-size:.92em;">Pago = chamadas - franquia gratuita</div>
           </div>
         </div>
-        <div class="card">
-          <h3>Franquias Mensais Gratuitas</h3>
-          <table style="margin:0;">
-            <tr>
-              <td><strong>Google Routes Pro</strong></td>
-              <td style="color:var(--green);font-weight:600;">10.000</td>
-            </tr>
-            <tr>
-              <td><strong>HERE Routing Truck</strong></td>
-              <td style="color:var(--green);font-weight:600;">5.000</td>
-            </tr>
-            <tr>
-              <td><strong>HERE Traffic (Inc+Flow)</strong></td>
-              <td style="color:var(--green);font-weight:600;">5.000*</td>
-            </tr>
+        <div class="card" style="padding:14px;">
+          <h3 style="font-size:1em;">Preço por 1.000 chamadas</h3>
+          <table style="margin:0;font-size:.92em;">
+            <tr><td><strong style="color:var(--google-blue);">Google Routes Pro</strong></td><td style="text-align:right;">US$ 5,00</td></tr>
+            <tr><td><strong style="color:var(--here-teal);">HERE Routing Truck</strong></td><td style="text-align:right;">US$ 2,75</td></tr>
+            <tr><td><strong style="color:var(--here-teal);">HERE Traffic</strong></td><td style="text-align:right;">US$ 2,75</td></tr>
           </table>
-          <p class="small" style="margin-top:6px;">*Cada consulta consome 2 transações de Traffic</p>
         </div>
       </div>
+
       <div class="animate-in delay-2">
-        <table>
+        <table style="font-size:.9em;">
           <thead>
             <tr>
-              <th>Fornecedor</th>
-              <th>Serviço</th>
+              <th>Intervalo</th>
+              <th>Ciclos/dia</th>
               <th>Chamadas/mês</th>
-              <th>Franquia</th>
-              <th>Pagas</th>
-              <th>Preço/1.000</th>
-              <th>USD</th>
-              <th>BRL</th>
+              <th style="color:var(--google-blue);">Google (USD)</th>
+              <th style="color:var(--here-teal);">HERE Routing (USD)</th>
+              <th style="color:var(--here-teal);">HERE Traffic (USD)</th>
+              <th>Total USD</th>
+              <th>Total BRL</th>
             </tr>
           </thead>
           <tbody>
-            <tr>
-              <td><strong style="color:var(--google-blue);">Google</strong></td>
-              <td>Routes Pro</td>
-              <td>14.400</td>
-              <td style="color:var(--green);">10.000</td>
-              <td>4.400</td>
-              <td>US$ 5,00</td>
-              <td><strong>US$ 22,00</strong></td>
-              <td>R$ 114,40</td>
+            <tr style="color:var(--text-sec);font-size:.92em;">
+              <td>15 min</td>
+              <td>96</td>
+              <td>57.600</td>
+              <td>US$ 238,00</td>
+              <td>US$ 144,65</td>
+              <td>US$ 303,05</td>
+              <td><strong>US$ 685,70</strong></td>
+              <td>R$ 3.565,64</td>
             </tr>
-            <tr>
-              <td><strong style="color:var(--here-teal);">HERE</strong></td>
-              <td>Routing Truck</td>
-              <td>14.400</td>
-              <td style="color:var(--green);">5.000</td>
-              <td>9.400</td>
-              <td>US$ 2,75</td>
-              <td><strong>US$ 25,85</strong></td>
-              <td>R$ 134,42</td>
-            </tr>
-            <tr>
-              <td><strong style="color:var(--here-teal);">HERE</strong></td>
-              <td>Traffic (Inc+Flow)</td>
+            <tr style="background:var(--yellow-light);">
+              <td><strong>30 min</strong></td>
+              <td>48</td>
               <td>28.800</td>
-              <td style="color:var(--green);">5.000</td>
-              <td>23.800</td>
-              <td>US$ 2,75</td>
-              <td><strong>US$ 65,45</strong></td>
-              <td>R$ 340,34</td>
+              <td>US$ 94,00</td>
+              <td>US$ 65,45</td>
+              <td>US$ 144,65</td>
+              <td><strong>US$ 304,10</strong></td>
+              <td><strong>R$ 1.581,32</strong></td>
+            </tr>
+            <tr style="background:var(--accent-light);border:2px solid var(--accent);">
+              <td><strong style="color:var(--accent);">1 hora (atual)</strong></td>
+              <td>24</td>
+              <td>14.400</td>
+              <td>US$ 22,00</td>
+              <td>US$ 25,85</td>
+              <td>US$ 65,45</td>
+              <td><strong>US$ 113,30</strong></td>
+              <td><strong style="color:var(--accent);">R$ 589,16</strong></td>
+            </tr>
+            <tr style="background:var(--green-light);">
+              <td><strong>2 horas</strong></td>
+              <td>12</td>
+              <td>7.200</td>
+              <td style="color:var(--green);">US$ 0,00*</td>
+              <td>US$ 6,05</td>
+              <td>US$ 25,85</td>
+              <td><strong>US$ 31,90</strong></td>
+              <td><strong style="color:var(--green);">R$ 165,88</strong></td>
+            </tr>
+            <tr style="background:var(--green-light);">
+              <td><strong>3 horas</strong></td>
+              <td>8</td>
+              <td>4.800</td>
+              <td style="color:var(--green);">US$ 0,00*</td>
+              <td style="color:var(--green);">US$ 0,00*</td>
+              <td>US$ 12,65</td>
+              <td><strong style="color:var(--green);">US$ 12,65</strong></td>
+              <td><strong style="color:var(--green);">R$ 65,78</strong></td>
             </tr>
           </tbody>
-          <tfoot>
-            <tr style="background:var(--accent-light);">
-              <td colspan="6" style="text-align:right;font-weight:700;border-top:2px solid var(--accent);">TOTAL MENSAL
-                (20 rotas)</td>
-              <td style="font-weight:800;font-size:1.05em;border-top:2px solid var(--accent);">US$ 113,30</td>
-              <td style="font-weight:800;font-size:1.05em;color:var(--accent);border-top:2px solid var(--accent);">R$
-                589,16</td>
-            </tr>
-          </tfoot>
         </table>
+        <p class="small" style="margin-top:6px;">* Dentro da franquia gratuita mensal (já descontada nos cálculos acima).</p>
       </div>
     </div>
   </section>
@@ -1224,52 +1242,8 @@
     </div>
   </section>
 
-  <!-- ===== SLIDE 14: EXTENSÕES FUTURAS ===== -->
+  <!-- ===== SLIDE 14: RESUMO EXECUTIVO ===== -->
   <section class="slide" data-slide="14">
-    <div class="slide-inner">
-      <h2 class="animate-in">Extensões Futuras (Curto, Médio e Longo Prazo)</h2>
-      <div class="compare-cols animate-in delay-1">
-        <div class="compare-col" style="background:var(--accent-light);border:2px solid var(--accent);">
-          <h3 style="color:var(--accent);text-align:center;">✅ IMPLEMENTADO E FUNCIONAL</h3>
-          <ul class="clean check">
-            <li>Consulta on-demand rápida com Google + HERE via FastAPI concorrente</li>
-            <li>Status em 4 níveis claros com map interativo (heatmap, badges)</li>
-            <li>Painel corporativo de 20 rotas em ciclos monitorados por Worker</li>
-            <li>Exportação Excel/CSV, Favoritos corporativos e histórico limpo</li>
-            <li>Painel React/TS/Vite responsivo e elegante</li>
-            <li>Modo caminhão especializado (Routing Truck HERE) com filtragem de 200m</li>
-          </ul>
-        </div>
-        <div class="compare-col" style="background:var(--green-light);border:2px solid var(--green);">
-          <h3 style="color:var(--green);text-align:center;">🚀 PRÓXIMAS EVOLUÇÕES</h3>
-          <h4
-            style="color:var(--text); margin-top:10px; border-bottom:1px solid #ccc; font-size:1.05em; padding-bottom:3px;">
-            1. Curto Prazo</h4>
-          <ul class="clean">
-            <li>Migração de autenticação para o Supabase Auth nativo</li>
-            <li>Pach em endpoints expostos e modernização de threat model básico</li>
-          </ul>
-          <h4
-            style="color:var(--text); margin-top:10px; border-bottom:1px solid #ccc; font-size:1.05em; padding-bottom:3px;">
-            2. Médio Prazo</h4>
-          <ul class="clean">
-            <li>Alertas corporativos automáticos por e-mail/SMS para desvios e retenção</li>
-            <li>Camada de circuit breaker / resiliência avançada para as APIs externas</li>
-          </ul>
-          <h4
-            style="color:var(--text); margin-top:10px; border-bottom:1px solid #ccc; font-size:1.05em; padding-bottom:3px;">
-            3. Longo Prazo</h4>
-          <ul class="clean">
-            <li>Integração nativa b2b com ERP/TMS da transportadora</li>
-            <li>Machine Learning: Predição preditiva utilizando a base temporal unificada</li>
-          </ul>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- ===== SLIDE 15: RESUMO EXECUTIVO ===== -->
-  <section class="slide" data-slide="15">
     <div class="slide-inner">
       <h2 class="animate-in" style="text-align:center;">Resumo Executivo Final</h2>
       <div class="card-grid grid-2 animate-in delay-1" style="margin:20px 0;">
@@ -1285,22 +1259,23 @@
         </div>
         <div class="card" style="border-top:4px solid var(--yellow);">
           <h3 style="color:var(--yellow);">QUANTO CUSTA</h3>
-          <p style="margin-bottom:10px;">Para <strong>20 rotas atualizadas a cada hora, 24/7:</strong></p>
-          <div class="highlight-box green-box" style="margin:0;padding:10px;">
-            <span class="number-medium" style="color:var(--green);">~R$ 589 / mês</span>
-          </div>
-          <p class="small" style="margin-top:6px;">Uso esporádico: dentro das franquias = <strong
-              style="color:var(--green);">R$ 0,00/mês</strong></p>
+          <p style="margin-bottom:10px;">20 rotas | 24h/dia | 30 dias/mês:</p>
+          <table style="margin:0;font-size:.88em;">
+            <tr><td>A cada 3h</td><td style="color:var(--green);font-weight:700;text-align:right;">R$ 66/mês</td></tr>
+            <tr><td>A cada 2h</td><td style="color:var(--green);font-weight:700;text-align:right;">R$ 166/mês</td></tr>
+            <tr style="background:var(--accent-light);"><td><strong>A cada 1h (atual)</strong></td><td style="color:var(--accent);font-weight:700;text-align:right;">R$ 589/mês</td></tr>
+            <tr><td>A cada 30 min</td><td style="font-weight:700;text-align:right;">R$ 1.581/mês</td></tr>
+          </table>
         </div>
         <div class="card" style="border-top:4px solid var(--orange);">
           <h3 style="color:var(--orange);">DECISÕES PENDENTES</h3>
           <div class="step">
             <div class="step-num">1</div>
-            <div>Definir rotas e frequência de monitoramento</div>
+            <div>Escolher frequência de monitoramento (30 min a 3h)</div>
           </div>
           <div class="step">
             <div class="step-num">2</div>
-            <div>Aprovar orçamento de APIs (~R$ 590/mês)</div>
+            <div>Aprovar orçamento de APIs (R$ 66 ~ R$ 1.581/mês)</div>
           </div>
           <div class="step">
             <div class="step-num">3</div>
@@ -1313,7 +1288,7 @@
         </div>
       </div>
       <p class="small animate-in delay-2" style="text-align:center;margin-top:12px;">Sistema em produção &nbsp;·&nbsp;
-        Versão 2.0 &nbsp;·&nbsp; Março 2026</p>
+        Versão 2.1 &nbsp;·&nbsp; Março 2026</p>
     </div>
   </section>
 
@@ -1323,7 +1298,7 @@
     <div class="progress-track">
       <div class="progress-fill" id="progress"></div>
     </div>
-    <span class="slide-counter" id="counter">1 / 15</span>
+    <span class="slide-counter" id="counter">1 / 14</span>
     <button class="nav-btn" id="btn-next" onclick="goTo(current+1)">Próximo →</button>
   </div>
 
