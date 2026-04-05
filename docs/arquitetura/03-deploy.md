@@ -1,107 +1,63 @@
 # Arquitetura de Deploy
 
-## Infraestrutura em produção
+## Topologia atual
 
 ```mermaid
 flowchart TB
-    subgraph CDN["🌐 CDN / Edge"]
-        Vercel[Vercel Edge]
-    end
-
-    subgraph Frontend["Frontend"]
-        SPA[SPA estático<br/>frontend/dist]
-    end
-
-    subgraph Backend["Backend"]
-        Render[Render.com<br/>monitoramento-dinamico-api]
-    end
-
-    subgraph CI["CI/CD"]
-        GHA[GitHub Actions<br/>monitor_dinamico.yml]
-    end
-
-    subgraph External["Externos"]
-        Google[Google API]
-        HERE[HERE API]
-        Supabase[Supabase]
-    end
-
-    User[Usuário] --> Vercel
-    Vercel --> SPA
-    Vercel -->|rewrites| Render
-    SPA -->|/auth, /painel, /rotas| Render
-    Render --> Google
-    Render --> HERE
-    Render --> Supabase
-    GHA -.->|coletor.py| Render
-    GHA -.->|secrets| Google
-    GHA -.->|secrets| HERE
-    GHA -.->|secrets| Supabase
+    User["Usuario"] --> Vercel["Vercel"]
+    Vercel --> SPA["frontend/dist"]
+    Vercel -->|/api/:path*| PublicAPI["Backend publico"]
+    PublicAPI --> Google["Google Routes API"]
+    PublicAPI --> Here["HERE Traffic API"]
+    PublicAPI --> Supabase["Supabase"]
+    GHA["GitHub Actions"] --> Worker["backend/workers/coletor.py"]
+    Worker --> Google
+    Worker --> Here
+    Worker --> Supabase
 ```
 
-## Rewrites do Vercel
+## Rewrites do frontend
+
+O contrato em producao esta centralizado em [`../../vercel.json`](../../vercel.json).
+
+Regras relevantes:
+
+| Source | Destino |
+| --- | --- |
+| `/api/:path*` | backend publico configurado no `vercel.json` |
+| `/(.*)` | `/index.html` |
+
+Observacao importante:
+
+- o frontend sempre chama `"/api/*"`;
+- a remocao do prefixo `/api` e responsabilidade da camada de rewrite/proxy.
+
+## Build do frontend
 
 ```mermaid
 flowchart LR
-    subgraph Vercel
-        R1["/auth/:path*"] --> API
-        R2["/painel"] --> API
-        R3["/painel/:path*"] --> API
-        R4["/rotas/:path*"] --> API
-        R5["/(.*)"] --> Index[index.html]
-    end
-
-    API[API Render]
+    Install["cd frontend && npm ci"] --> Build["npm run build"]
+    Build --> Dist["frontend/dist"]
+    Dist --> Vercel["Vercel output"]
 ```
 
-| Source | Destination |
-|--------|-------------|
-| `/auth/:path*` | `https://monitoramento-dinamico-api.onrender.com/auth/:path*` |
-| `/painel`, `/painel/:path*` | API Render |
-| `/rotas/:path*` | API Render |
-| `/(.*)` | `/index.html` (SPA fallback) |
-
-## Pipeline de build
+## Workflow do worker
 
 ```mermaid
 flowchart LR
-    subgraph Build
-        B1[cd frontend] --> B2[npm ci]
-        B2 --> B3[npm run build]
-        B3 --> B4[frontend/dist]
-    end
-
-    subgraph Deploy
-        D1[Vercel] --> D2[Output: frontend/dist]
-    end
+    Trigger["schedule + workflow_dispatch"] --> Checkout["actions/checkout"]
+    Checkout --> Python["actions/setup-python 3.11"]
+    Python --> Deps["pip install -r backend/requirements.txt"]
+    Deps --> Run["python workers/coletor.py"]
+    Run --> Artifact["upload-artifact backend/relatorios"]
 ```
 
-## GitHub Actions — Coletor
+## Segredos operacionais
 
-```mermaid
-flowchart TB
-    subgraph Trigger
-        Cron["cron: 0,30 * * * *"]
-        Manual["workflow_dispatch"]
-    end
-
-    subgraph Job
-        J1[Checkout] --> J2[Setup Python]
-        J2 --> J3[Install deps]
-        J3 --> J4[Run coletor.py]
-    end
-
-    subgraph Secrets
-        S1[GOOGLE_MAPS_API_KEY]
-        S2[HERE_API_KEY]
-        S3[SUPABASE_URL]
-        S4[SUPABASE_KEY]
-    end
-
-    Cron --> Job
-    Manual --> Job
-    J4 --> S1
-    J4 --> S2
-    J4 --> S3
-    J4 --> S4
-```
+| Variavel | Uso |
+| --- | --- |
+| `GOOGLE_MAPS_API_KEY` | consulta Google Routes |
+| `HERE_API_KEY` | consulta HERE |
+| `SUPABASE_URL` | endpoint do banco |
+| `SUPABASE_SERVICE_ROLE_KEY` | escrita de snapshots |
+| `SUPABASE_KEY` | compatibilidade legada |

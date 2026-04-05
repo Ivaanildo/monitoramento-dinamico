@@ -1,103 +1,86 @@
 # Fluxo de Dados
 
-## Fluxo do coletor (GitHub Actions)
+## Coleta periodica
 
-O coletor roda a cada 30 minutos e alimenta o Supabase com dados agregados.
+O workflow do GitHub Actions roda **a cada hora** e executa o worker diretamente. O backend web nao participa desse ciclo.
 
 ```mermaid
 sequenceDiagram
     participant GH as GitHub Actions
-    participant C as coletor.py
-    participant Consultor as consultor
-    participant Google as Google Routes
-    participant HERE as HERE Traffic
-    participant Cache as cache
-    participant Painel as painel_service
-    participant Repo as repository
+    participant W as workers/coletor.py
+    participant C as consultor
+    participant G as Google Routes
+    participant H as HERE Traffic
+    participant P as painel_service
+    participant R as repository
     participant DB as Supabase
 
-    GH->>C: Trigger (cron 0,30 * * * *)
-    C->>Consultor: consultar() para R01-R20
-    par Paralelo
-        Consultor->>Google: Routes API
-        Consultor->>HERE: Traffic API
+    GH->>W: cron 0 * * * *
+    W->>C: consultar 20 rotas
+    par Fontes externas
+        C->>G: tempo de rota
+        C->>H: incidentes e fluxo
     end
-    Google-->>Consultor: dados rota
-    HERE-->>Consultor: incidentes
-    Consultor->>Cache: verifica TTL
-    Consultor-->>C: ResultadoRota[]
-    C->>Painel: converter_para_resumo_painel()
-    Painel-->>C: resumo agregado
-    C->>Repo: salvar_snapshot_agregado()
-    Repo->>DB: INSERT ciclos, snapshots_rotas
+    G-->>C: duracao e atraso
+    H-->>C: incidentes e jam factor
+    C-->>W: resultado detalhado
+    W->>P: converter para resumo do painel
+    W->>R: salvar_snapshot_agregado()
+    R->>DB: ciclos + snapshots_rotas
 ```
 
-## Fluxo do painel (usuário autenticado)
+## Painel agregado
 
 ```mermaid
 sequenceDiagram
-    participant U as Usuário
+    participant U as Usuario
     participant SPA as Frontend
     participant API as FastAPI
     participant Auth as auth_local
     participant Painel as painel_service
     participant DB as Supabase
 
-    U->>SPA: Acessa /painel
-    SPA->>API: GET /auth/session
-    API->>Auth: verifica cookie
-    Auth-->>API: sessão válida
-    API-->>SPA: 200 OK
-    SPA->>API: GET /painel
+    U->>SPA: abre /painel
+    SPA->>API: GET /api/auth/session
+    API->>Auth: validar cookie
+    Auth-->>API: sessao valida
+    SPA->>API: GET /api/painel
     API->>Painel: obter_painel_agregado()
-    Painel->>DB: último ciclo + snapshots
-    DB-->>Painel: dados
-    Painel-->>API: painel JSON
-    API-->>SPA: painel
-    SPA-->>U: Renderiza PainelPage
+    Painel->>DB: ultimo ciclo + snapshots
+    DB-->>Painel: linhas do painel
+    Painel-->>API: payload agregado
+    API-->>SPA: JSON
 ```
 
-## Fluxo da consulta on-demand (rota específica)
+## Consulta detalhada
 
 ```mermaid
 sequenceDiagram
-    participant U as Usuário
+    participant U as Usuario
     participant SPA as Frontend
     participant API as FastAPI
-    participant Consultor as consultor
-    participant Google as Google Routes
-    participant HERE as HERE Traffic
+    participant C as consultor
+    participant G as Google Routes
+    participant H as HERE Traffic
 
-    U->>SPA: Seleciona rota em ConsultaPage
-    SPA->>API: GET /rotas/{id}/consultar
-    API->>Consultor: consultar(rota_id)
-    Consultor->>Consultor: cache hit?
-    alt Cache miss
-        Consultor->>Google: Routes API
-        Consultor->>HERE: Traffic API
-        Google-->>Consultor: polyline, duração
-        HERE-->>Consultor: incidentes
-        Consultor->>Consultor: armazena em cache
+    U->>SPA: abre /consulta?rota_id=Rxx
+    SPA->>API: GET /api/rotas/{id}/snapshot
+    API-->>SPA: snapshot rapido
+    SPA->>API: GET /api/rotas/{id}/consultar
+    API->>C: consultar rota corporativa
+    par Fontes externas
+        C->>G: Routes API
+        C->>H: Traffic API
     end
-    Consultor-->>API: ResultadoRota
-    API-->>SPA: JSON
-    SPA->>SPA: MapView exibe rota + incidentes
-    SPA-->>U: Mapa Leaflet
+    C-->>API: resultado detalhado
+    API-->>SPA: JSON com polyline, incidentes e metricas
 ```
 
-## Fluxo de autenticação
+## Autenticacao local
 
 ```mermaid
 flowchart LR
-    subgraph Login
-        L1[POST /auth/login] --> L2[auth_local.validar]
-        L2 --> L3[Cookie projeto_zero_session]
-    end
-
-    subgraph Requisições
-        R1[GET /painel] --> R2[Depends require_session]
-        R2 --> R3[Cookie válido?]
-        R3 -->|Sim| R4[200 + dados]
-        R3 -->|Não| R5[401 Unauthorized]
-    end
+    Login["POST /auth/login"] --> Cookie["Cookie de sessao"]
+    Cookie --> Protegidas["/rotas, /painel, /favoritos, /cache"]
+    Protegidas --> Valida["Depends(verificar_autenticacao)"]
 ```

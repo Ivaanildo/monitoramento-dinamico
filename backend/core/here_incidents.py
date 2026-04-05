@@ -1059,8 +1059,14 @@ def consultar(
 
         # -------- Estratégia 1: HERE Routing v8 → corridor --------
         routing_result = _obter_polyline_rota(api_key, lat1, lng1, lat2, lng2, via=via)
-        route_pts = routing_result.get("corridor_pts", [])
-        display_pts = routing_result.get("display_pts", [])
+        if isinstance(routing_result, dict):
+            route_pts = routing_result.get("corridor_pts", [])
+            display_pts = routing_result.get("display_pts", [])
+        else:
+            # Retrocompatibilidade para testes/mocks antigos que ainda devolvem
+            # apenas a lista de pontos da rota.
+            route_pts = routing_result or []
+            display_pts = routing_result or []
         usar_corridor = False
         zones_incidents: list[str] = []
         zones_flow: list[str] = []

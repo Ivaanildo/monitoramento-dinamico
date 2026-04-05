@@ -42,9 +42,11 @@ export default defineConfig({
   server: {
     open: true,
     proxy: {
-      '/auth': 'http://127.0.0.1:8000',
-      '/painel': 'http://127.0.0.1:8000',
-      '/rotas': 'http://127.0.0.1:8000'
+      '/api': {
+        target: 'http://127.0.0.1:8000',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api/, ''),
+      }
     }
   }
 })
