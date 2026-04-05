@@ -1,6 +1,6 @@
-import React, { useState, useRef, useEffect } from "react";
-import { ChevronDown, ChevronUp, Search, X, Eraser } from "lucide-react";
-import { motion, AnimatePresence } from "motion/react";
+import React, { useEffect, useRef, useState } from "react";
+import { Check, ChevronDown, Eraser, Search, X } from "lucide-react";
+import { AnimatePresence, motion } from "motion/react";
 
 interface FilterDropdownProps {
   label: string;
@@ -21,26 +21,30 @@ export function FilterDropdown({ label, options, selected, onChange }: FilterDro
         setSearch("");
       }
     }
+
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const filtered = options.filter((o) =>
-    o.toLowerCase().includes(search.toLowerCase())
-  );
-
-  const displayValue = selected.length === 0 ? "Todos" : selected.join(", ");
+  const filteredOptions = options.filter((option) => option.toLowerCase().includes(search.toLowerCase()));
+  const displayValue =
+    selected.length === 0
+      ? "Todos"
+      : selected.length === 1
+        ? selected[0]
+        : `${selected.length} selecionados`;
 
   const toggleOption = (option: string) => {
     if (selected.includes(option)) {
-      onChange(selected.filter((s) => s !== option));
-    } else {
-      onChange([...selected, option]);
+      onChange(selected.filter((value) => value !== option));
+      return;
     }
+
+    onChange([...selected, option]);
   };
 
-  const clearSelection = (e: React.MouseEvent) => {
-    e.stopPropagation();
+  const clearSelection = (event: React.MouseEvent) => {
+    event.stopPropagation();
     onChange([]);
   };
 
@@ -49,126 +53,116 @@ export function FilterDropdown({ label, options, selected, onChange }: FilterDro
   };
 
   return (
-    <div className="relative flex-1 min-w-[140px]" ref={dropdownRef}>
-      {/* Main Button */}
-      <div
-        className="rounded-lg overflow-hidden cursor-pointer shadow-md"
-        style={{ background: "#FFD700" }}
-        onClick={() => setIsOpen(!isOpen)}
+    <div className="relative min-w-[180px] flex-1" ref={dropdownRef}>
+      <button
+        type="button"
+        onClick={() => setIsOpen((value) => !value)}
+        className="glass-panel w-full rounded-[24px] px-4 py-3 text-left transition hover:bg-white/80"
       >
-        <div className="px-3 pt-2 pb-1 flex items-center justify-between">
-          <span className="font-bold text-black text-xs tracking-wide">{label}</span>
-          {selected.length > 0 && (
-            <button
-              onClick={clearSelection}
-              className="text-black hover:text-gray-600 transition-colors"
-            >
-              <Eraser size={13} />
-            </button>
-          )}
-        </div>
-        <div
-          className="px-3 pb-2 flex items-center justify-between gap-1"
-          style={{ borderTop: "1px solid rgba(0,0,0,0.12)" }}
-        >
-          <span className="text-black text-sm truncate max-w-[90%]">{displayValue}</span>
-          <ChevronDown
-            size={16}
-            className="text-black flex-shrink-0 transition-transform duration-200"
-            style={{ transform: isOpen ? "rotate(180deg)" : "rotate(0deg)" }}
-          />
-        </div>
-      </div>
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-slate-400">{label}</p>
+            <p className="mt-2 truncate text-sm font-semibold text-slate-900">{displayValue}</p>
+          </div>
 
-      {/* Dropdown Panel */}
+          <div className="flex items-center gap-2">
+            {selected.length > 0 ? (
+              <span className="rounded-full bg-amber-50 px-2 py-1 text-[10px] font-bold uppercase tracking-[0.16em] text-amber-700">
+                {selected.length}
+              </span>
+            ) : null}
+            <ChevronDown
+              className="h-4 w-4 flex-shrink-0 text-slate-400 transition-transform"
+              style={{ transform: isOpen ? "rotate(180deg)" : "rotate(0deg)" }}
+            />
+          </div>
+        </div>
+      </button>
+
       <AnimatePresence>
-        {isOpen && (
+        {isOpen ? (
           <motion.div
-            initial={{ opacity: 0, y: -8, scale: 0.97 }}
+            initial={{ opacity: 0, y: 10, scale: 0.98 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -8, scale: 0.97 }}
+            exit={{ opacity: 0, y: 10, scale: 0.98 }}
             transition={{ duration: 0.18, ease: "easeOut" }}
-            className="absolute top-full left-0 z-50 bg-white shadow-2xl rounded-lg mt-1 w-64 border border-gray-200 overflow-hidden"
+            className="glass-panel absolute left-0 top-[calc(100%+0.5rem)] z-40 w-full overflow-hidden rounded-[26px]"
           >
-            {/* Panel Header */}
-            <div
-              className="px-3 py-2 flex items-center justify-between"
-              style={{ background: "#FFD700" }}
-            >
-              <span className="font-bold text-black text-sm">{label}</span>
-              <button onClick={clearSelection} className="text-black hover:text-gray-700 transition-colors">
-                <Eraser size={14} />
+            <div className="border-b border-slate-200/80 px-4 py-3">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-slate-400">{label}</p>
+                  <p className="mt-1 text-sm font-semibold text-slate-900">Ajuste o recorte do painel</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={clearSelection}
+                  className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.14em] text-slate-500 transition hover:border-slate-300 hover:text-slate-900"
+                >
+                  <Eraser className="h-3.5 w-3.5" />
+                  Limpar
+                </button>
+              </div>
+            </div>
+
+            <div className="border-b border-slate-200/80 px-4 py-3">
+              <div className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-3 py-2">
+                <Search className="h-4 w-4 text-slate-400" />
+                <input
+                  type="text"
+                  value={search}
+                  onChange={(event) => setSearch(event.target.value)}
+                  placeholder="Pesquisar opcao"
+                  className="w-full bg-transparent text-sm text-slate-700 outline-none placeholder:text-slate-400"
+                  onClick={(event) => event.stopPropagation()}
+                  autoFocus
+                />
+                {search ? (
+                  <button type="button" onClick={() => setSearch("")} className="text-slate-400 transition hover:text-slate-600">
+                    <X className="h-3.5 w-3.5" />
+                  </button>
+                ) : null}
+              </div>
+
+              <button
+                type="button"
+                onClick={selectAll}
+                className="mt-3 inline-flex items-center gap-2 rounded-full bg-slate-950 px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.14em] text-white transition hover:bg-slate-800"
+              >
+                Mostrar tudo
               </button>
             </div>
 
-            {/* Todos Row */}
-            <div
-              className="px-3 py-2 flex items-center justify-between cursor-pointer hover:brightness-95 transition-all"
-              style={{ background: "#FFD700" }}
-              onClick={selectAll}
-            >
-              <span className="text-black text-sm font-medium">Todos</span>
-              <ChevronUp size={16} className="text-black" />
-            </div>
-
-            {/* Search */}
-            <div className="px-3 py-2 flex items-center gap-2 border-b border-gray-200 bg-white">
-              <Search size={14} className="text-gray-400 flex-shrink-0" />
-              <input
-                type="text"
-                placeholder="Pesquisar"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="flex-1 outline-none text-sm text-gray-700 placeholder-gray-400"
-                onClick={(e) => e.stopPropagation()}
-                autoFocus
-              />
-              {search && (
-                <button onClick={() => setSearch("")} className="text-gray-400 hover:text-gray-600">
-                  <X size={12} />
-                </button>
-              )}
-            </div>
-
-            {/* Options List */}
-            <div className="max-h-52 overflow-y-auto">
-              {filtered.length === 0 ? (
-                <div className="px-3 py-3 text-sm text-gray-400 text-center">
-                  Nenhum resultado
-                </div>
+            <div className="max-h-64 overflow-y-auto px-2 py-2">
+              {filteredOptions.length === 0 ? (
+                <div className="px-4 py-5 text-center text-sm text-slate-400">Nenhum resultado encontrado.</div>
               ) : (
-                filtered.map((option) => (
-                  <div
-                    key={option}
-                    className="px-3 py-2 flex items-center gap-2 hover:bg-yellow-50 cursor-pointer transition-colors border-b border-gray-50"
-                    onClick={() => toggleOption(option)}
-                  >
-                    <div
-                      className="w-4 h-4 flex-shrink-0 border-2 rounded-sm flex items-center justify-center transition-all"
-                      style={{
-                        borderColor: selected.includes(option) ? "#FFD700" : "#aaa",
-                        background: selected.includes(option) ? "#FFD700" : "white",
-                      }}
+                filteredOptions.map((option) => {
+                  const isSelected = selected.includes(option);
+                  return (
+                    <button
+                      key={option}
+                      type="button"
+                      onClick={() => toggleOption(option)}
+                      className="flex w-full items-center gap-3 rounded-2xl px-3 py-2.5 text-left transition hover:bg-white/80"
                     >
-                      {selected.includes(option) && (
-                        <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
-                          <path
-                            d="M1 4L3.5 6.5L9 1"
-                            stroke="black"
-                            strokeWidth="1.8"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          />
-                        </svg>
-                      )}
-                    </div>
-                    <span className="text-sm text-gray-800">{option}</span>
-                  </div>
-                ))
+                      <span
+                        className="flex h-5 w-5 items-center justify-center rounded-full border text-white transition"
+                        style={{
+                          borderColor: isSelected ? "#0f172a" : "rgba(148, 163, 184, 0.6)",
+                          background: isSelected ? "#0f172a" : "transparent",
+                        }}
+                      >
+                        {isSelected ? <Check className="h-3.5 w-3.5" /> : null}
+                      </span>
+                      <span className="min-w-0 flex-1 truncate text-sm font-medium text-slate-700">{option}</span>
+                    </button>
+                  );
+                })
               )}
             </div>
           </motion.div>
-        )}
+        ) : null}
       </AnimatePresence>
     </div>
   );
